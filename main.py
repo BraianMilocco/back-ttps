@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from db.base import Base
 from db.session import SessionLocal, engine
 from models.user import User
-from helpers import create_access_token
+from helpers import create_access_token, get_data_from_token
 from settings import settings
 
 app = FastAPI()
@@ -26,7 +26,7 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
                 detail="Could not validate credentials",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        return email
+        return get_data_from_token(payload)
     except:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -60,12 +60,12 @@ def login_user(email: str, password: str, db: Session = Depends(get_db)):
         plain_password=password, hashed_password=user.hashed_password
     ):
         raise HTTPException(status_code=400, detail="Incorrect password")
-    access_token = create_access_token(data={"sub": user.email})
+    access_token = create_access_token(data=user.jwt_dict())
     return {"success": True, "access_token": access_token, "token_type": "bearer"}
 
 
 @app.get("/users/me/")
-async def read_users_me(current_user: str = Depends(get_current_user)):
+async def read_users_me(current_user: dict = Depends(get_current_user)):
     return current_user
 
 

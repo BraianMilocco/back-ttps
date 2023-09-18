@@ -1,5 +1,5 @@
 # TTPS
- Poner descripcion
+![modelo DB](modelo_db.png)
 
 ## Pre-requisitos
 

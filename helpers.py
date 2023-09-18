@@ -16,3 +16,12 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
         to_encode, settings.secret_key, algorithm=settings.algorithm
     )
     return encoded_jwt
+
+
+def get_data_from_token(payload: dict):
+    return {
+        "email": payload.get("sub"),
+        "rol": payload.get("rol"),
+        "provincia": payload.get("provincia"),
+        "id": payload.get("id"),
+    }
