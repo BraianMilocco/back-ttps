@@ -9,10 +9,6 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 from db.base import Base
 
-from .user import User
-from .provincia import Provincia
-from .entidad import Entidad
-
 
 SECTORES = [
     ("publico", "Público"),
@@ -37,13 +33,16 @@ class Sede(Base):
     cantidad_personas_estables = Column(Integer, index=True, nullable=True)
 
     entidad_id = Column(Integer, ForeignKey("entidades.id"), nullable=False)
-    entidad = relationship(Entidad, back_populates="sedes")
+    entidad = relationship("Entidad", back_populates="sedes")
     provincia_id = Column(Integer, ForeignKey("provincias.id"), nullable=False)
-    provincia = relationship(Provincia, back_populates="sedes")
+    provincia = relationship("Provincia", back_populates="sedes")
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    user = relationship(User, back_populates="entidades")
+    user = relationship("User", back_populates="entidades")
 
-    responsables = relationship("ResponsableSede", back_populates="sede")
+    responsables = relationship("ResponsableSede", back_populates="sedes")
+    espacio_obligado = relationship(
+        "EspacioObligado", back_populates="sede", uselist=False
+    )
 
     __table_args__ = (
         CheckConstraint(sector.in_([choice[0] for choice in SECTORES])),

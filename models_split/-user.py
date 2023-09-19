@@ -4,7 +4,10 @@ from sqlalchemy.orm import relationship
 import re
 
 from db.base import Base
-from .provincia import Provincia
+
+# from .provincia import Provincia
+
+# from .espacio_user_asociation import espacio_user_association
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -22,10 +25,16 @@ class User(Base):
     hashed_password = Column(String)
     # Relaciones
     provincia_id = Column(Integer, ForeignKey("provincias.id"), nullable=True)
-    provincia = relationship(Provincia, back_populates="users")
+    provincia = relationship("Provincia", back_populates="users")
     rol = Column(String, index=True)
     entidades = relationship("Entidad", back_populates="user")
 
+    visitas = relationship("Visita", back_populates="user")
+    # espacios = relationship(
+    #     "EspacioObligado",
+    #     secondary=espacio_user_association,
+    #     back_populates="administradores",
+    # )
     __tablename__ = "users"
     __table_args__ = (CheckConstraint(rol.in_([choice[0] for choice in ROLES])),)
 
@@ -77,6 +86,7 @@ class User(Base):
 
     @classmethod
     def get_by_email(cls, email: str, db):
+        print("get_by_email")
         return db.query(cls).filter(cls.email == email).first()
 
     @classmethod

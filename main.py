@@ -4,7 +4,7 @@ import jwt
 from sqlalchemy.orm import Session
 from db.base import Base
 from db.session import SessionLocal, engine
-from models.user import User
+from models import User
 from helpers import create_access_token, get_data_from_token
 from settings import settings
 

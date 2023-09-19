@@ -1,6 +1,8 @@
 # TTPS
+#### Primer modelo entidad/uml
 ![modelo DB](modelo_db.png)
-
+#### v1
+![modelo DB](db_v1.png)
 ## Pre-requisitos
 
 - Python 3.10.12
