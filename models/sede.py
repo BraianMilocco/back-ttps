@@ -35,14 +35,15 @@ class Sede(Base):
     cantidad_pisos = Column(Integer, index=True, nullable=True)
     cantidad_personas_externas = Column(Integer, index=True, nullable=True)
     cantidad_personas_estables = Column(Integer, index=True, nullable=True)
-
+    provincia_id = Column(Integer, ForeignKey("provincias.id"), nullable=False)
+    provincia = relationship(Provincia, back_populates="sedes")
     entidad_id = Column(Integer, ForeignKey("entidades.id"), nullable=False)
     entidad = relationship(Entidad, back_populates="sedes")
     provincia_id = Column(Integer, ForeignKey("provincias.id"), nullable=False)
     provincia = relationship(Provincia, back_populates="sedes")
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    user = relationship(User, back_populates="entidades")
-
+    user = relationship(User, back_populates="sedes")
+    espacio_obligado = relationship("EspacioObligado", back_populates="sede")
     responsables = relationship("ResponsableSede", back_populates="sede")
 
     __table_args__ = (

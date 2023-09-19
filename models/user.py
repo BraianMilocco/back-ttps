@@ -25,7 +25,8 @@ class User(Base):
     provincia = relationship(Provincia, back_populates="users")
     rol = Column(String, index=True)
     entidades = relationship("Entidad", back_populates="user")
-
+    sedes = relationship("Sede", back_populates="user")
+    visitas = relationship("Visita", back_populates="user")
     __tablename__ = "users"
     __table_args__ = (CheckConstraint(rol.in_([choice[0] for choice in ROLES])),)
 
