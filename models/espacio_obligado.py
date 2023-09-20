@@ -14,6 +14,7 @@ from .user_espacio_association import user_espacio_association
 
 ESTADOS = [
     "En proceso de ser Cardio-Asistido",
+    "Cardio-Asistido",
     "Cardio-Asistido con DDJJ",
     "Cardio-Asistido Certificado",
 ]
