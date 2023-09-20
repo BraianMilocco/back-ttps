@@ -1,4 +1,12 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, CheckConstraint
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    ForeignKey,
+    Boolean,
+    CheckConstraint,
+    DateTime,
+)
 from sqlalchemy.orm import relationship
 from db.base import Base
 
@@ -16,6 +24,7 @@ ESTADOS = [
     "En proceso de ser Cardio-Asistido",
     "Cardio-Asistido con DDJJ",
     "Cardio-Asistido Certificado",
+    "Cardio-Asisitdo Certificado Vencido",  # cuando se vence el certificado por provincia, fecha certificado + 1 año
 ]
 
 
@@ -33,7 +42,8 @@ class EspacioObligado(Base):
     deas = relationship(Dea, back_populates="espacio_obligado")
     visitas = relationship(Visita, back_populates="espacio_obligado")
     muertes_subitas = relationship(MuerteSubita, back_populates="espacio_obligado")
-
+    cardio_asistido_desde = Column(DateTime, nullable=True)
+    cardio_asistido_vence = Column(DateTime, nullable=True)
     ddjj_personal_capacitado = Column(Boolean, nullable=True)
     ddjj_senaletica_adecuada = Column(Boolean, nullable=True)
     ddjj_protocolo_accion = Column(String, nullable=True)

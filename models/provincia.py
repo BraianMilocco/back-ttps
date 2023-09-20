@@ -11,6 +11,6 @@ class Provincia(Base):
     nombre = Column(String, unique=True, index=True)
     extension_km = Column(Integer, nullable=True)
     poblacion = Column(Integer, nullable=True)
-
+    meses_duracion_certificado = Column(Integer, nullable=True)
     users = relationship("User", back_populates="provincia")
     sedes = relationship(Sede, back_populates="provincia")
