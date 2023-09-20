@@ -33,25 +33,25 @@ def upgrade() -> None:
         [
             {
                 "email": "representante@mail.com",
-                "hashed_password": "1$2b$12$htBWJYuDNGDVyEPqiVZYmuOUB8DMoszBzazfFmKITMEKnkH0Lq6eK",
+                "hashed_password": "$2b$12$htBWJYuDNGDVyEPqiVZYmuOUB8DMoszBzazfFmKITMEKnkH0Lq6eK",
                 "provincia_id": None,
                 "rol": "representante",
             },
             {
                 "email": "provincial@mail.com",
-                "hashed_password": "1$2b$12$htBWJYuDNGDVyEPqiVZYmuOUB8DMoszBzazfFmKITMEKnkH0Lq6eK",
+                "hashed_password": "$2b$12$htBWJYuDNGDVyEPqiVZYmuOUB8DMoszBzazfFmKITMEKnkH0Lq6eK",
                 "provincia_id": 1,
                 "rol": "administrador_provincial",
             },
             {
                 "email": "provincial2@mail.com",
-                "hashed_password": "1$2b$12$htBWJYuDNGDVyEPqiVZYmuOUB8DMoszBzazfFmKITMEKnkH0Lq6eK",
+                "hashed_password": "$2b$12$htBWJYuDNGDVyEPqiVZYmuOUB8DMoszBzazfFmKITMEKnkH0Lq6eK",
                 "provincia_id": 17,
                 "rol": "administrador_provincial",
             },
             {
                 "email": "certificador@mail.com",
-                "hashed_password": "1$2b$12$htBWJYuDNGDVyEPqiVZYmuOUB8DMoszBzazfFmKITMEKnkH0Lq6eK",
+                "hashed_password": "$2b$12$htBWJYuDNGDVyEPqiVZYmuOUB8DMoszBzazfFmKITMEKnkH0Lq6eK",
                 "provincia_id": None,
                 "rol": "certificador",
             },
