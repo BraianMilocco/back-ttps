@@ -10,6 +10,14 @@ from models.provincia import Provincia
 from models.entidad import Entidad
 from models.sede import Sede
 from models.responsable_sede import ResponsableSede
+from models.espacio_obligado import EspacioObligado
+from models.dea import Dea
+from models.reparacion_dea import ReparacionDea
+from models.visita import Visita
+from models.muerte_subita import MuerteSubita
+from models.incovenientes import Incovenientes
+
+from models.declaracion_jurada import DeclaracionJurada
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

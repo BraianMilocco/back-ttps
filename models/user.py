@@ -5,6 +5,8 @@ import re
 
 from db.base import Base
 from .provincia import Provincia
+from .muerte_subita import MuerteSubita
+from .user_espacio_association import user_espacio_association
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -25,6 +27,15 @@ class User(Base):
     provincia = relationship(Provincia, back_populates="users")
     rol = Column(String, index=True)
     entidades = relationship("Entidad", back_populates="user")
+    sedes = relationship("Sede", back_populates="user")
+    visitas = relationship("Visita", back_populates="user")
+    muertes_subitas = relationship(MuerteSubita, back_populates="user")
+
+    espacios_administrados = relationship(
+        "EspacioObligado",
+        secondary=user_espacio_association,
+        back_populates="administradores",
+    )
 
     __tablename__ = "users"
     __table_args__ = (CheckConstraint(rol.in_([choice[0] for choice in ROLES])),)
