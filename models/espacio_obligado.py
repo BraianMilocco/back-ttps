@@ -43,6 +43,7 @@ class EspacioObligado(Base):
     visitas = relationship(Visita, back_populates="espacio_obligado")
     muertes_subitas = relationship(MuerteSubita, back_populates="espacio_obligado")
     cardio_asistido_desde = Column(DateTime, nullable=True)
+    cardio_asistido_vence = Column(DateTime, nullable=True)
     ddjj_personal_capacitado = Column(Boolean, nullable=True)
     ddjj_senaletica_adecuada = Column(Boolean, nullable=True)
     ddjj_protocolo_accion = Column(String, nullable=True)
