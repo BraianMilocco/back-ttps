@@ -12,7 +12,3 @@ class DeclaracionJurada(Base):
     protocolo_accion = Column(String)
     sistema_energia_media = Column(String)
     cantidad_deas = Column(Integer)
-
-    espacio_obligado = relationship(
-        "EspacioObligado", back_populates="declaracion_jurada", uselist=False
-    )

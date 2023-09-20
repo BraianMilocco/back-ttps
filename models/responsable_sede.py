@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 from db.base import Base
 
 # from .sede import Sede
+from .muerte_subita import MuerteSubita
 
 
 class ResponsableSede(Base):
@@ -15,3 +16,4 @@ class ResponsableSede(Base):
 
     sede_id = Column(Integer, ForeignKey("sedes.id"), nullable=False)
     sede = relationship("Sede", back_populates="responsables")
+    muertes_subitas = relationship(MuerteSubita, back_populates="responsable")

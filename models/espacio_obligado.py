@@ -7,6 +7,8 @@ from .dea import Dea
 from .visita import Visita
 
 # from .declaracion_jurada import DeclaracionJurada
+from .muerte_subita import MuerteSubita
+from .user_espacio_association import user_espacio_association
 
 # from .espacio_user_asociation import espacio_user_association
 
@@ -30,17 +32,30 @@ class EspacioObligado(Base):
     sede = relationship("Sede", back_populates="espacio_obligado", uselist=False)
     deas = relationship(Dea, back_populates="espacio_obligado")
     visitas = relationship(Visita, back_populates="espacio_obligado")
-    # declaracion_jurada_id = Column(
-    #     Integer, ForeignKey("declaraciones_juradas.id"), nullable=True, unique=True
-    # )
-    # declaracion_jurada = relationship(
-    #     "DeclaracionJurada", back_populates="espacio_obligado", uselist=False
-    # )
+    muertes_subitas = relationship(MuerteSubita, back_populates="espacio_obligado")
+
+    ddjj_personal_capacitado = Column(Boolean, nullable=True)
+    ddjj_senaletica_adecuada = Column(Boolean, nullable=True)
+    ddjj_protocolo_accion = Column(String, nullable=True)
+    ddjj_sistema_energia_media = Column(String, nullable=True)
+    ddjj_cantidad_deas = Column(Integer, nullable=True)
+
+    administradores = relationship(
+        "User",
+        secondary=user_espacio_association,
+        back_populates="espacios_administrados",
+    )
+
+    @property
+    def declaracion_jurada(self):
+        return {
+            "personal_capacitado": self.ddjj_personal_capacitado,
+            "senaletica_adecuada": self.ddjj_senaletica_adecuada,
+            "protocolo_accion": self.ddjj_protocolo_accion,
+            "sistema_energia_media": self.ddjj_sistema_energia_media,
+            "cantidad_deas": self.ddjj_cantidad_deas,
+        }
 
     # notificaciones = relationship("Notificacion", back_populates="espacio_obligado")
-
-    # administradores = relationship(
-    #     "User", secondary=espacio_user_association, back_populates="espacios"
-    # )
 
     __table_args__ = (CheckConstraint(estado.in_(ESTADOS)),)

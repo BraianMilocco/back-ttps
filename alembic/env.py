@@ -14,8 +14,10 @@ from models.espacio_obligado import EspacioObligado
 from models.dea import Dea
 from models.reparacion_dea import ReparacionDea
 from models.visita import Visita
+from models.muerte_subita import MuerteSubita
+from models.incovenientes import Incovenientes
 
-# from models.declaracion_jurada import DeclaracionJurada
+from models.declaracion_jurada import DeclaracionJurada
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
