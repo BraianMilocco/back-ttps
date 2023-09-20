@@ -1,6 +1,6 @@
 # TTPS
 ![modelo DB](modelo_db.png)
-
+![db muestra](db.png)
 ## Pre-requisitos
 
 - Python 3.10.12
