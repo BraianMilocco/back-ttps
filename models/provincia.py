@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
 from db.base import Base
+from models.sede import Sede
 
 
 class Provincia(Base):
@@ -12,4 +13,4 @@ class Provincia(Base):
     poblacion = Column(Integer, nullable=True)
 
     users = relationship("User", back_populates="provincia")
-    sedes = relationship("Sede", back_populates="provincia")
+    sedes = relationship(Sede, back_populates="provincia")

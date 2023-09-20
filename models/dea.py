@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 from db.base import Base
 
 # from .espacio_obligado import EspacioObligado
+from .reparacion_dea import ReparacionDea
 
 
 class Dea(Base):
@@ -20,4 +21,4 @@ class Dea(Base):
         Integer, ForeignKey("espacios_obligados.id"), nullable=False, unique=True
     )
     espacio_obligado = relationship("EspacioObligado", back_populates="deas")
-    reparaciones = relationship("ReparacionDea", back_populates="dea")
+    reparaciones = relationship(ReparacionDea, back_populates="dea")

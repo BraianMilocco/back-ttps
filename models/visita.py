@@ -10,6 +10,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 from db.base import Base
 
+
 RESULTADOS = ["Aprobado", "Rechazado", "Dado de baja"]
 
 
@@ -27,5 +28,4 @@ class Visita(Base):
     espacio_obligado = relationship("EspacioObligado", back_populates="visitas")
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True, unique=True)
     user = relationship("User", back_populates="visitas")
-
     __table_args__ = (CheckConstraint(resultado.in_(RESULTADOS)),)

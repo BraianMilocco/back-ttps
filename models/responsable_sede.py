@@ -1,7 +1,8 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 from db.base import Base
-from .sede import Sede
+
+# from .sede import Sede
 
 
 class ResponsableSede(Base):
@@ -13,4 +14,4 @@ class ResponsableSede(Base):
     email = Column(String, index=True, nullable=True)
 
     sede_id = Column(Integer, ForeignKey("sedes.id"), nullable=False)
-    sede = relationship(Sede, back_populates="responsables")
+    sede = relationship("Sede", back_populates="responsables")

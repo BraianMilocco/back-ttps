@@ -2,6 +2,10 @@ from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, CheckConstr
 from sqlalchemy.orm import relationship
 from db.base import Base
 
+# from models.sede import Sede
+from .dea import Dea
+from .visita import Visita
+
 # from .declaracion_jurada import DeclaracionJurada
 
 # from .espacio_user_asociation import espacio_user_association
@@ -24,8 +28,8 @@ class EspacioObligado(Base):
     )
     sede_id = Column(Integer, ForeignKey("sedes.id"), nullable=False, unique=True)
     sede = relationship("Sede", back_populates="espacio_obligado", uselist=False)
-    deas = relationship("Dea", back_populates="espacio_obligado")
-    visitas = relationship("Visita", back_populates="espacio_obligado")
+    deas = relationship(Dea, back_populates="espacio_obligado")
+    visitas = relationship(Visita, back_populates="espacio_obligado")
     # declaracion_jurada_id = Column(
     #     Integer, ForeignKey("declaraciones_juradas.id"), nullable=True, unique=True
     # )
