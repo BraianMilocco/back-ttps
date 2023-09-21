@@ -6,6 +6,7 @@ import re
 from db.base import Base
 from .provincia import Provincia
 from .muerte_subita import MuerteSubita
+
 from .user_espacio_association import user_espacio_association
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

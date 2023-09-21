@@ -18,8 +18,6 @@ from .visita import Visita
 from .muerte_subita import MuerteSubita
 from .user_espacio_association import user_espacio_association
 
-# from .espacio_user_asociation import espacio_user_association
-
 ESTADOS = [
     "En proceso de ser Cardio-Asistido",
     "Cardio-Asistido con DDJJ",
@@ -69,3 +67,46 @@ class EspacioObligado(Base):
     # notificaciones = relationship("Notificacion", back_populates="espacio_obligado")
 
     __table_args__ = (CheckConstraint(estado.in_(ESTADOS)),)
+
+    def to_dict_list(self):
+        # print(self.administradores)
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "estado": self.estado,
+            "aprobado": self.aprobado,
+            # "cant_administradores": len(self.administradores_validos())
+            # if self.administradores
+            # else 0,
+        }
+
+    @classmethod
+    def create(cls, espacio_obligado, user_id, db):
+        espacio_obligado = cls(
+            nombre=espacio_obligado.nombre,
+            sede_id=espacio_obligado.sede_id,
+        )
+        return cls.save(espacio_obligado, db)
+
+    @classmethod
+    def save(cls, espacio_obligado, db):
+        try:
+            db.add(espacio_obligado)
+            db.commit()
+            db.refresh(espacio_obligado)
+        except Exception as e:
+            db.rollback()
+            print(e)
+            return None, str(e)
+        return espacio_obligado, None
+
+    def solicitar_administracion(self, user, db):
+        self.administradores.append(user)
+        try:
+            db.commit()
+            db.refresh(self)
+        except Exception as e:
+            db.rollback()
+            print(e)
+            return None, str(e)
+        return self, None

@@ -4,11 +4,23 @@ import jwt
 from sqlalchemy.orm import Session
 from db.base import Base
 from db.session import SessionLocal, engine
-from models.user import User
-from helpers import create_access_token, get_data_from_token
 from settings import settings
+
+# Helpers
+from helpers import create_access_token, get_data_from_token
+
+# Schemas
 from schemas.user import UserCreate, UserLogin
-from schemas.espacios_obligados import AprobarEspacioObligado
+from schemas.espacios_obligados import EspacioObligado as EspacioObligadoSchema
+from schemas.entidad import Entidad as EntidadSchema
+from schemas.sede import Sede as SedeSchema
+
+# Models
+from models.user import User
+from models.entidad import Entidad
+from models.provincia import Provincia
+from models.sede import Sede
+from models.espacio_obligado import EspacioObligado
 
 app = FastAPI()
 
@@ -55,18 +67,20 @@ def get_db():
         db.close()
 
 
-@app.post("/users/")
+@app.post("/register/")
 def create_user(user_data: UserLogin, db: Session = Depends(get_db)):
+    """Create a new user"""
     user, message = User.create(
         email=user_data.email, password=user_data.password, db=db
     )
     if not user:
-        return {"success": False, "message": message}
+        return HTTPException(status_code=400, detail=message)
     return {"success": True, "email": user.email, "id": user.id}
 
 
-@app.post("/users/login")
+@app.post("/login/")
 def login_user(user_data: UserCreate, db: Session = Depends(get_db)):
+    """Login a user"""
     user = User.get_by_email(email=user_data.email, db=db)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -80,17 +94,98 @@ def login_user(user_data: UserCreate, db: Session = Depends(get_db)):
 
 @app.get("/users/me/")
 async def read_users_me(current_user: dict = Depends(get_current_user)):
+    """Get current user"""
     return current_user
 
 
-@app.post("/espacios_obligados/")
-async def aprobar(
-    aprobado: AprobarEspacioObligado, current_user: dict = Depends(get_current_user)
+@app.get("/entidades/")
+async def get_entidades():  # (current_user: dict = Depends(get_current_user)):
+    """Get entidades con sedes y sus espacios obligados"""
+    entidades_dict = Entidad.get_all(db=SessionLocal())
+    return {"data": entidades_dict}
+
+
+@app.get("/entidades/{entidad_id}/")
+async def get_entidad(entidad_id: int, current_user: dict = Depends(get_current_user)):
+    entidad = Entidad.get_by_id(entidad_id, db=SessionLocal())
+    if not entidad:
+        return HTTPException(status_code=400, detail="Entidad no encontrada")
+    return {"data": entidad.to_dict_list()}
+
+
+@app.get("/provincias/")
+async def get_provincias(current_user: dict = Depends(get_current_user)):
+    """Get provincias"""
+    user_has_role(current_user, "representante")
+    provincias = Provincia.get_all(db=SessionLocal())
+    return {"data": provincias}
+
+
+@app.post("/entidades/")
+async def create_entidad(
+    entidad: EntidadSchema, current_user: dict = Depends(get_current_user)
 ):
-    user_has_role(current_user, "administrador_provincial")
-    if aprobado.aprobado:
-        return {"success": True, "message": "Administracion aprobada"}
-    return {"success": False, "message": "Administracion rechazada"}
+    """Create entidad"""
+    user_has_role(current_user, "representante")
+    entidad, message = Entidad.create(entidad, current_user["id"], db=SessionLocal())
+    if not entidad:
+        return HTTPException(status_code=400, detail=message)
+    return {"success": True, "entidad": entidad.to_dict_list()}
+
+
+@app.post("/sede/")
+async def create_sede(
+    sede_data: SedeSchema,
+    current_user: dict = Depends(get_current_user),
+):
+    """Create sede"""
+    user_has_role(current_user, "representante")
+    entidad = Entidad.get_by_id(sede_data.entidad_id, db=SessionLocal())
+    if not entidad:
+        return HTTPException(status_code=400, detail="Entidad no encontrada")
+    sede, message = Sede.create(sede_data, current_user["id"], db=SessionLocal())
+    if not sede:
+        return HTTPException(status_code=400, detail=message)
+    return {"success": True, "sede": sede.to_dict_list()}
+
+
+@app.post("/espacios_obligados/")
+async def create_espacio_obligado(
+    espacio_obligado: EspacioObligadoSchema,
+    current_user: dict = Depends(get_current_user),
+):
+    """Create espacio obligado"""
+    user_has_role(current_user, "representante")
+    sede = Sede.get_by_id(espacio_obligado.sede_id, db=SessionLocal())
+    if not sede:
+        return HTTPException(status_code=400, detail="Sede no encontrada")
+    _espacio_obligado, message = EspacioObligado.create(
+        espacio_obligado, current_user["id"], db=SessionLocal()
+    )
+    if not _espacio_obligado:
+        return HTTPException(status_code=400, detail=message)
+    solicitud, message = _espacio_obligado.solicitar_administracion(
+        current_user["id"], db=SessionLocal()
+    )
+    if not solicitud:
+        return HTTPException(
+            status_code=400, detail="Error al solicitar administracion"
+        )
+    return {"success": True, "espacio_obligado": espacio_obligado.to_dict_list()}
+
+
+# @app.post("/solicitar_administracion/{espacio_obligado_id}/")
+# async def solicitar_administracion(
+
+# @app.get("/sede/{sede_id}/")
+# async def get_sede(sede_id: int, current_user: dict = Depends(get_current_user)):
+#     """Get sede"""
+#     user_has_role(current_user, "representante")
+#     sede = Sede.get_by_id(sede_id, db=SessionLocal())
+#     if not sede:
+#         return HTTPException(status_code=400, detail="Sede no encontrada")
+
+#     return {"success": True, "sede": sede.to_dict_list()}
 
 
 if __name__ == "__main__":

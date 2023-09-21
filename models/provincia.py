@@ -14,3 +14,11 @@ class Provincia(Base):
     meses_duracion_certificado = Column(Integer, nullable=True)
     users = relationship("User", back_populates="provincia")
     sedes = relationship(Sede, back_populates="provincia")
+
+    @classmethod
+    def get_all(cls, db):
+        provincias = db.query(cls).all()
+        return [provincia.to_dict_list() for provincia in provincias]
+
+    def to_dict_list(self):
+        return {"id": self.id, "nombre": self.nombre}
