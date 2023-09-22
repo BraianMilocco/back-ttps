@@ -17,6 +17,7 @@ from .visita import Visita
 # from .declaracion_jurada import DeclaracionJurada
 from .muerte_subita import MuerteSubita
 from .user_espacio_association import user_espacio_association
+from .espacio_user import EspacioUser
 
 ESTADOS = [
     "En proceso de ser Cardio-Asistido",
@@ -53,6 +54,10 @@ class EspacioObligado(Base):
         secondary=user_espacio_association,
         back_populates="espacios_administrados",
     )
+    users = relationship(
+        EspacioUser,
+        back_populates="espacio",
+    )
 
     @property
     def declaracion_jurada(self):
@@ -69,16 +74,16 @@ class EspacioObligado(Base):
     __table_args__ = (CheckConstraint(estado.in_(ESTADOS)),)
 
     def to_dict_list(self):
-        # print(self.administradores)
         return {
             "id": self.id,
             "nombre": self.nombre,
             "estado": self.estado,
             "aprobado": self.aprobado,
-            # "cant_administradores": len(self.administradores_validos())
-            # if self.administradores
-            # else 0,
+            "cant_administradores": len(self.admins()),
         }
+
+    def admins(self):
+        return [user for user in self.users if user.valida]
 
     @classmethod
     def create(cls, espacio_obligado, user_id, db):
@@ -110,3 +115,12 @@ class EspacioObligado(Base):
             print(e)
             return None, str(e)
         return self, None
+
+    @classmethod
+    def tiene_jurisdiccion(cls, espacio_obligado_id, provincia_id, db):
+        espacio = db.query(cls).filter(cls.id == espacio_obligado_id).first()
+        if not espacio:
+            return False, "No existe el espacio obligado"
+        if not espacio.sede.provincia_id == provincia_id:
+            return False, "No tiene jurisdiccion en esta Provincia"
+        return True, None

@@ -37,6 +37,10 @@ class User(Base):
         secondary=user_espacio_association,
         back_populates="administradores",
     )
+    espacios = relationship(
+        "EspacioUser",
+        back_populates="user",
+    )
 
     __tablename__ = "users"
     __table_args__ = (CheckConstraint(rol.in_([choice[0] for choice in ROLES])),)
@@ -101,4 +105,5 @@ class User(Base):
             "id": self.id,
             "rol": self.rol,
             "provincia": self.provincia.nombre if self.provincia else None,
+            "provincia_id": self.provincia_id,
         }

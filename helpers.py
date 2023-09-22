@@ -23,5 +23,6 @@ def get_data_from_token(payload: dict):
         "email": payload.get("sub"),
         "rol": payload.get("rol"),
         "provincia": payload.get("provincia"),
+        "provincia_id": payload.get("provincia_id"),
         "id": payload.get("id"),
     }

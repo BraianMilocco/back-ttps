@@ -16,7 +16,7 @@ from models.reparacion_dea import ReparacionDea
 from models.visita import Visita
 from models.muerte_subita import MuerteSubita
 from models.incovenientes import Incovenientes
-
+from models.espacio_user import EspacioUser
 from models.declaracion_jurada import DeclaracionJurada
 
 # this is the Alembic Config object, which provides

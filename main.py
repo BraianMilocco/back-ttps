@@ -21,6 +21,7 @@ from models.entidad import Entidad
 from models.provincia import Provincia
 from models.sede import Sede
 from models.espacio_obligado import EspacioObligado
+from models.espacio_user import EspacioUser
 
 app = FastAPI()
 
@@ -164,14 +165,79 @@ async def create_espacio_obligado(
     )
     if not _espacio_obligado:
         return HTTPException(status_code=400, detail=message)
-    solicitud, message = _espacio_obligado.solicitar_administracion(
-        current_user["id"], db=SessionLocal()
+    solicitud, message = EspacioUser.create(
+        current_user["id"],
+        _espacio_obligado.id,
+        db=SessionLocal(),
+        al_crear_espacio=True,
     )
     if not solicitud:
         return HTTPException(
             status_code=400, detail="Error al solicitar administracion"
         )
+
     return {"success": True, "espacio_obligado": espacio_obligado.to_dict_list()}
+
+
+@app.post("/solicitar_administracion/{espacio_obligado_id}/")
+async def solicitar_administracion(
+    espacio_obligado_id: int,
+    current_user: dict = Depends(get_current_user),
+):
+    """Solicitar administracion de espacio obligado"""
+    user_has_role(current_user, "representante")
+    espacio_obligado = EspacioObligado.get_by_id(espacio_obligado_id, db=SessionLocal())
+    if not espacio_obligado:
+        return HTTPException(status_code=400, detail="Espacio obligado no encontrado")
+    solicitud, message = EspacioUser.create(
+        current_user["id"],
+        espacio_obligado_id,
+        db=SessionLocal(),
+        al_crear_espacio=False,
+    )
+    if not solicitud:
+        return HTTPException(status_code=400, detail=message)
+
+    return {"success": True}
+
+
+@app.get("/solicitudes_administracion/")
+async def solicitudes_administracion(
+    current_user: dict = Depends(get_current_user),
+):
+    """Solicitudes de administracion de espacio obligado"""
+    user_has_role(current_user, "administrador_provincial")
+    solicitudes = EspacioUser.get_pending(
+        current_user["provincia_id"], db=SessionLocal()
+    )
+    return {"data": solicitudes}
+
+
+@app.post("/aceptar_administracion/{espacio_obligado_id}/{user_id}/}")
+async def aceptar_administracion(
+    espacio_obligado_id: int,
+    user_id: int,
+    aprobar: bool,
+    current_user: dict = Depends(get_current_user),
+):
+    """Aceptar administracion de espacio obligado"""
+    user_has_role(current_user, "administrador_provincial")
+    tiene_jurisdiccion, message = EspacioObligado.tiene_jurisdiccion(
+        espacio_obligado_id, current_user["provincia_id"]
+    )
+    if not tiene_jurisdiccion:
+        return HTTPException(status_code=400, detail=message)
+    solicitud = EspacioUser.get_by_user_and_espacio(
+        user_id, espacio_obligado_id, db=SessionLocal()
+    )
+    if not solicitud or not solicitud.pending:
+        return HTTPException(status_code=400, detail="Solicitud no encontrada")
+    solicitud.valida = aprobar
+    solicitud.pending = False
+    solicitud, message = EspacioUser.save(solicitud, db=SessionLocal())
+    if not solicitud:
+        return HTTPException(status_code=500, detail=message)
+    return {"success": True}
 
 
 # @app.post("/solicitar_administracion/{espacio_obligado_id}/")

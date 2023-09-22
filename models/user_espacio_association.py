@@ -14,10 +14,10 @@ user_espacio_association = Table(
 )
 
 
-def get_solicitudes(espacio_id):
+def get_administradores(espacio_id):
     return (
         db.query(user_espacio_association)
-        .filter(user_espacio_association.c.valida == False)
+        .filter(user_espacio_association.c.valida == True)
         .filter(user_espacio_association.c.espacio_id == espacio_id)
         .all()
     )
