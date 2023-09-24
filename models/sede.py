@@ -60,6 +60,22 @@ class Sede(Base):
             else None,
         }
 
+    def info_completa(self):
+        if (
+            self.sector
+            and self.tipo
+            and self.direccion
+            and self.latitud
+            and self.longitud
+            and self.superficie is not None
+            and self.cantidad_pisos is not None
+            and self.cantidad_personas_externas is not None
+            and self.cantidad_personas_estables is not None
+            and len(self.responsables) > 0
+        ):
+            return True
+        return False
+
     @classmethod
     def save(cls, sede, db):
         try:
@@ -77,7 +93,6 @@ class Sede(Base):
         sede = cls(
             nombre=sede.nombre,
             numero=sede.numero,
-            sector=sede.sector,
             direccion=sede.direccion,
             latitud=sede.latitud,
             longitud=sede.longitud,
@@ -86,3 +101,24 @@ class Sede(Base):
             user_id=user_id,
         )
         return cls.save(sede, db)
+
+    @classmethod
+    def get_by_id(cls, sede_id, db):
+        return db.query(cls).filter(cls.id == sede_id).first()
+
+    def update(self, data, db):
+        self.sector = data.sector
+        self.tipo = data.tipo
+        self.superficie = data.superficie
+        self.cantidad_pisos = data.cantidad_pisos
+        self.cantidad_personas_externas = data.cantidad_personas_externas
+        self.cantidad_personas_estables = data.cantidad_personas_estables
+
+        try:
+            db.commit()
+            db.refresh(self)
+        except Exception as e:
+            db.rollback()
+            print(e)
+            return None, str(e)
+        return self, None

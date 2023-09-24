@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from sqlalchemy import (
     Column,
     Integer,
@@ -80,16 +81,24 @@ class EspacioObligado(Base):
             "estado": self.estado,
             "aprobado": self.aprobado,
             "cant_administradores": len(self.admins()),
+            "puede_completar_ddjj_dea": self.puede_completar_ddjj_dea,
+            "cardio_asistido_desde": self.cardio_asistido_desde,
+            "cardio_asistido_vence": self.cardio_asistido_vence,
         }
 
     def admins(self):
         return [user for user in self.users if user.valida]
+
+    @property
+    def puede_completar_ddjj_dea(self):
+        return self.sede.info_completa()
 
     @classmethod
     def create(cls, espacio_obligado, user_id, db):
         espacio_obligado = cls(
             nombre=espacio_obligado.nombre,
             sede_id=espacio_obligado.sede_id,
+            estado="En proceso de ser Cardio-Asistido",
         )
         return cls.save(espacio_obligado, db)
 
@@ -124,3 +133,22 @@ class EspacioObligado(Base):
         if not espacio.sede.provincia_id == provincia_id:
             return False, "No tiene jurisdiccion en esta Provincia"
         return True, None
+
+    @classmethod
+    def get_by_id(cls, espacio_obligado_id, db):
+        return db.query(cls).filter(cls.id == espacio_obligado_id).first()
+
+    def certificar(self, db):
+        self.estado = "Cardio-Asistido Certificado"
+        self.cardio_asistido_desde = datetime.now()
+        self.cardio_asistido_vence = datetime.now() + timedelta(
+            days=self.sede.provincia.dias_duracion_certificado
+        )
+        try:
+            db.commit()
+            db.refresh(self)
+        except Exception as e:
+            db.rollback()
+            print(e)
+            return None, "error al certificar el espacio obligado"
+        return self, None

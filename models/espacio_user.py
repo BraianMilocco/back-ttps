@@ -48,9 +48,10 @@ class EspacioUser(Base):
         return cls.save(espacio_user, db)
 
     @classmethod
-    def save(cls, espacio_user, db):
+    def save(cls, espacio_user, db, create=True):
         try:
-            db.add(espacio_user)
+            if create:
+                db.add(espacio_user)
             db.commit()
             db.refresh(espacio_user)
         except Exception as e:
@@ -76,3 +77,26 @@ class EspacioUser(Base):
             "user": self.user.email,
             "creacion": self.fecha_creacion,
         }
+
+    def update(self, db):
+        try:
+            db.commit()
+            db.refresh(self)
+        except Exception as e:
+            db.rollback()
+            print(e)
+            return None, str(e)
+        return self, None
+
+    @classmethod
+    def user_is_admin_sede(cls, user_id, sede_id, db):
+        user_admins = (
+            db.query(cls)
+            .filter(cls.user_id == user_id)
+            .filter(cls.pendiente == False)
+            .all()
+        )
+        for user_admin in user_admins:
+            if user_admin.valida == True and user_admin.espacio.sede_id == sede_id:
+                return True
+        return False

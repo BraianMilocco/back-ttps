@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     secret_key: str = "LA_POSTA_VA_AL_DOT_ENV"
     algorithm: str = "HS256"
     access_token_expiration_minutes: int = 600
+    fake_cron_key: str = "LA_POSTA_VA_AL_DOT_ENV"
 
     class Config:
         env_file = ".env"

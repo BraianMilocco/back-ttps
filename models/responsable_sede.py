@@ -17,3 +17,39 @@ class ResponsableSede(Base):
     sede_id = Column(Integer, ForeignKey("sedes.id"), nullable=False)
     sede = relationship("Sede", back_populates="responsables")
     muertes_subitas = relationship(MuerteSubita, back_populates="responsable")
+
+    @classmethod
+    def create(cls, data, sede_id: int, db):
+        responsable = cls(
+            nombre=data.nombre,
+            telefono=data.telefono,
+            email=data.email,
+            sede_id=sede_id,
+        )
+
+        return cls.save(responsable, db)
+
+    @classmethod
+    def save(cls, responsable, db):
+        try:
+            db.add(responsable)
+            db.commit()
+            return responsable, None
+        except Exception as e:
+            return None, str(e)
+
+    @classmethod
+    def get_by_sede(cls, sede_id: int, db):
+        responsables = db.query(cls).filter(cls.sede_id == sede_id).all()
+        lista = []
+        for responsable in responsables:
+            lista.append(responsable.get_dict())
+        return lista
+
+    def get_dict(self):
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "telefono": self.telefono,
+            "email": self.email,
+        }
