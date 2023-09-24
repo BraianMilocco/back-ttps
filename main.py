@@ -11,11 +11,15 @@ from helpers import create_access_token, get_data_from_token
 
 # Schemas
 from schemas.user import UserCreate, UserLogin
-from schemas.espacios_obligados import EspacioObligado as EspacioObligadoSchema
+from schemas.espacios_obligados import (
+    EspacioObligado as EspacioObligadoSchema,
+    Ddjj as DdjjSchema,
+)
 from schemas.entidad import Entidad as EntidadSchema
 from schemas.sede import Sede as SedeSchema, SedeCompleta as SedeCompletaSchema
 from schemas.responsables import ResponsablesSchema
 from schemas.visita import Visita as VisitaSchema
+from schemas.dea import DeaSchema
 
 # Models
 from models.user import User
@@ -26,6 +30,7 @@ from models.espacio_obligado import EspacioObligado
 from models.espacio_user import EspacioUser
 from models.responsable_sede import ResponsableSede
 from models.visita import Visita
+from models.dea import Dea
 
 app = FastAPI()
 
@@ -135,7 +140,7 @@ async def create_entidad(
     entidad, message = Entidad.create(entidad, current_user["id"], db=get_db())
     if not entidad:
         return HTTPException(status_code=400, detail=message)
-    return {"success": True, "entidad": entidad.to_dict_list()}
+    return {"success": True, "data": entidad.to_dict_list()}
 
 
 @app.post("/sedes/")
@@ -151,7 +156,27 @@ async def create_sede(
     sede, message = Sede.create(sede_data, current_user["id"], db=get_db())
     if not sede:
         return HTTPException(status_code=400, detail=message)
-    return {"success": True, "sede": sede.to_dict_list()}
+    return {"success": True, "data": sede.to_dict_list()}
+
+
+@app.post("/sedes/{sede_id}/")
+async def completar_sedes(
+    sede_id: int,
+    sede_data: SedeCompletaSchema,
+    current_user: dict = Depends(get_current_user),
+):
+    """Completar todos los datos de la sede"""
+    user_has_role(current_user, "representante")
+    sede = Sede.get_by_id(sede_id, db=get_db())
+    if not sede:
+        raise HTTPException(status_code=400, detail="Sede no encontrada")
+    user_is_admin = EspacioUser.user_is_admin_sede(current_user["id"], sede_id, db)
+    if not user_is_admin:
+        raise HTTPException(status_code=400, detail="No es administrador de la sede")
+    sede, message = sede.update(sede_data, db=get_db())
+    if not sede:
+        raise HTTPException(status_code=500, detail=message)
+    return {"success": user_is_admin}
 
 
 @app.post("/espacios_obligados/")
@@ -178,7 +203,86 @@ async def create_espacio_obligado(
     if not solicitud:
         raise HTTPException(status_code=400, detail="Error al solicitar administracion")
 
-    return {"success": True, "espacio_obligado": _espacio_obligado.to_dict_list()}
+    return {"success": True, "data": _espacio_obligado.to_dict_list()}
+
+
+@app.get("/espacios_obligados/{espacio_id}/")
+async def get_espacio_obligado(
+    espacio_id: int,
+    current_user: dict = Depends(get_current_user),
+):
+    """Get espacio obligado"""
+    espacio_obligado = EspacioObligado.get_by_id(espacio_id, db=get_db())
+    if not espacio_obligado:
+        raise HTTPException(status_code=400, detail="Espacio obligado no encontrado")
+    return {"data": espacio_obligado.to_dict_list()}
+
+
+@app.post("/ddjj/{espacio_obligado_id}/")
+async def cargar_ddjj(
+    espacio_obligado_id: int,
+    ddjj: DdjjSchema,
+    current_user: dict = Depends(get_current_user),
+):
+    """Cargar ddjj y si corresponde cambia el estado del espacio obligado"""
+    user_has_role(current_user, "representante")
+    espacio_obligado = EspacioObligado.get_by_id(espacio_obligado_id, db=get_db())
+    if not espacio_obligado:
+        raise HTTPException(status_code=400, detail="Espacio obligado no encontrado")
+    print(espacio_obligado)
+    if not espacio_obligado.puede_completar_ddjj_dea:
+        raise HTTPException(
+            status_code=400, detail="La sede no tiene toda la informacion completa"
+        )
+    user_is_admin = EspacioUser.user_is_admin_espacio(
+        current_user["id"], espacio_obligado_id, db
+    )
+    if not user_is_admin:
+        raise HTTPException(status_code=400, detail="No es administrador del espacio")
+    espacio_obligado, message = espacio_obligado.update_ddjj(ddjj, db=get_db())
+    if not espacio_obligado:
+        raise HTTPException(status_code=400, detail=message)
+    return {"data": espacio_obligado.to_dict_list()}
+
+
+@app.post("/deas/")
+async def cargar_dea(
+    dea_data: DeaSchema,
+    current_user: dict = Depends(get_current_user),
+):
+    """Cargar dea"""
+    user_has_role(current_user, "representante")
+    espacio_obligado = EspacioObligado.get_by_id(
+        dea_data.espacio_obligado_id, db=get_db()
+    )
+    if not espacio_obligado:
+        raise HTTPException(status_code=400, detail="Espacio obligado no encontrado")
+    if not espacio_obligado.puede_completar_ddjj_dea:
+        raise HTTPException(
+            status_code=400, detail="La sede no tiene toda la informacion completa"
+        )
+    user_is_admin = EspacioUser.user_is_admin_espacio(
+        current_user["id"], dea_data.espacio_obligado_id, db
+    )
+    if not user_is_admin:
+        raise HTTPException(status_code=400, detail="No es administrador del espacio")
+    dea, message = Dea.create(dea_data, db=get_db())
+    if not dea:
+        raise HTTPException(status_code=400, detail=message)
+    estado_actualizado, message = espacio_obligado.validar_ddjj(db=get_db())
+    if not estado_actualizado:
+        raise HTTPException(status_code=400, detail=message)
+    return {"data": dea.to_dict_list()}
+
+
+@app.get("/deas/{espacio_obligado_id}")
+async def get_deas(espacio_obligado_id: int):
+    """Get deas de un espacio obligado"""
+    espacio_obligado = EspacioObligado.get_by_id(espacio_obligado_id, db=get_db())
+    if not espacio_obligado:
+        raise HTTPException(status_code=400, detail="Espacio obligado no encontrado")
+    deas = Dea.get_by_espacio_obligado(espacio_obligado_id, db=get_db())
+    return {"data": deas}
 
 
 @app.post("/solicitar_administracion/{espacio_obligado_id}/")
@@ -240,26 +344,6 @@ async def aceptar_administracion(
     return {"success": True}
 
 
-@app.post("/sedes/{sede_id}/")
-async def completar_sedes(
-    sede_id: int,
-    sede_data: SedeCompletaSchema,
-    current_user: dict = Depends(get_current_user),
-):
-    """Completar todos los datos de la sede"""
-    user_has_role(current_user, "representante")
-    sede = Sede.get_by_id(sede_id, db=get_db())
-    if not sede:
-        raise HTTPException(status_code=400, detail="Sede no encontrada")
-    user_is_admin = EspacioUser.user_is_admin_sede(current_user["id"], sede_id, db)
-    if not user_is_admin:
-        raise HTTPException(status_code=400, detail="No es administrador de la sede")
-    sede, message = sede.update(sede_data, db=get_db())
-    if not sede:
-        raise HTTPException(status_code=500, detail=message)
-    return {"success": user_is_admin}
-
-
 @app.get("/responsables/{sede_id}")
 async def get_responsables(
     sede_id: int, current_user: dict = Depends(get_current_user)
@@ -295,6 +379,7 @@ async def crear_responsables(
 
 @app.get("/resultados-posibles/visitas/")
 def get_resultados_posibles():
+    """Retorna los resultados posibles de una visita"""
     return {"data": ["Aprobado", "Rechazado", "Dado de baja"]}
 
 
@@ -340,6 +425,51 @@ async def create_visita(
     return {"data": visita.to_dict_list()}
 
 
+@app.post("/activacion/dea/{dea_id}/")
+async def activar_dea(
+    dea_id: int, activo: bool, current_user: dict = Depends(get_current_user)
+):
+    """ "Activa o desactiva un dea"""
+    user_has_role(current_user, "representante")
+    dea = Dea.get_by_id(dea_id, db=get_db())
+    if not dea:
+        raise HTTPException(status_code=400, detail="Dea no encontrado")
+
+    user_is_admin = EspacioUser.user_is_admin_espacio(
+        current_user["id"], dea.espacio_obligado_id, db
+    )
+    if not user_is_admin:
+        raise HTTPException(status_code=400, detail="No es administrador del espacio")
+    dea, message = dea.update_activo(activo, db)
+    if not dea:
+        raise HTTPException(status_code=500, detail=message)
+    return {"success": True}
+
+
+@app.post("/mantenimiento/dea/{dea_id}/")
+async def activar_dea(dea_id: int, current_user: dict = Depends(get_current_user)):
+    """ "Activa o desactiva un dea"""
+    user_has_role(current_user, "representante")
+    dea = Dea.get_by_id(dea_id, db=get_db())
+    if not dea:
+        raise HTTPException(status_code=400, detail="Dea no encontrado")
+
+    user_is_admin = EspacioUser.user_is_admin_espacio(
+        current_user["id"], dea.espacio_obligado_id, db
+    )
+    if not user_is_admin:
+        raise HTTPException(status_code=400, detail="No es administrador del espacio")
+    dea, message = dea.actualizar_fecha_ultimo_mantenimiento(db)
+    if not dea:
+        raise HTTPException(status_code=500, detail=message)
+    return {"success": True}
+
+
+# Cargar Muerte Subita
+# Get Muerte Subita
+# Cargar inconvenientes
+# Cargar reparaciones
+# Get Notificaciones por espacio obligado
 if __name__ == "__main__":
     Base.metadata.create_all(bind=engine)
     print("Database tables created!")

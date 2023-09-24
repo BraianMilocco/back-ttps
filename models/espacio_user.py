@@ -100,3 +100,27 @@ class EspacioUser(Base):
             if user_admin.valida == True and user_admin.espacio.sede_id == sede_id:
                 return True
         return False
+
+    @classmethod
+    def user_is_admin_espacio(cls, user_id, espacio_id, db):
+        user_admins = (
+            db.query(cls)
+            .filter(cls.user_id == user_id)
+            .filter(cls.pendiente == False)
+            .all()
+        )
+        for user_admin in user_admins:
+            if user_admin.valida == True and user_admin.espacio_id == espacio_id:
+                return True
+        return False
+
+    @classmethod
+    def get_espacios_id_user_administra(user_id, db):
+        user_administra = (
+            db.query(cls)
+            .filter(cls.user_id == user_id)
+            .filter(cls.pendiente == False)
+            .filter(cls.valida == True)
+            .all()
+        )
+        return [user.espacio_id for user in user_administra]

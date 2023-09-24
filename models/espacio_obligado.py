@@ -10,6 +10,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 from db.base import Base
+from datetime import datetime
 
 # from models.sede import Sede
 from .dea import Dea
@@ -19,6 +20,7 @@ from .visita import Visita
 from .muerte_subita import MuerteSubita
 from .user_espacio_association import user_espacio_association
 from .espacio_user import EspacioUser
+from .notificacion import Notificacion
 
 ESTADOS = [
     "En proceso de ser Cardio-Asistido",
@@ -39,11 +41,12 @@ class EspacioObligado(Base):
     )
     sede_id = Column(Integer, ForeignKey("sedes.id"), nullable=False, unique=True)
     sede = relationship("Sede", back_populates="espacio_obligado", uselist=False)
-    deas = relationship(Dea, back_populates="espacio_obligado")
     visitas = relationship(Visita, back_populates="espacio_obligado")
     muertes_subitas = relationship(MuerteSubita, back_populates="espacio_obligado")
+    notificaciones = relationship(Notificacion, back_populates="espacio_obligado")
     cardio_asistido_desde = Column(DateTime, nullable=True)
     cardio_asistido_vence = Column(DateTime, nullable=True)
+    deas = relationship(Dea, back_populates="espacio_obligado")
     ddjj_personal_capacitado = Column(Boolean, nullable=True)
     ddjj_senaletica_adecuada = Column(Boolean, nullable=True)
     ddjj_protocolo_accion = Column(String, nullable=True)
@@ -84,6 +87,18 @@ class EspacioObligado(Base):
             "puede_completar_ddjj_dea": self.puede_completar_ddjj_dea,
             "cardio_asistido_desde": self.cardio_asistido_desde,
             "cardio_asistido_vence": self.cardio_asistido_vence,
+            "ddjj": self.ddjj_dict,
+        }
+
+    @property
+    def ddjj_dict(self):
+        return {
+            "personal_capacitado": self.ddjj_personal_capacitado,
+            "senaletica_adecuada": self.ddjj_senaletica_adecuada,
+            "protocolo_accion": self.ddjj_protocolo_accion,
+            "sistema_energia_media": self.ddjj_sistema_energia_media,
+            "cantidad_deas": self.ddjj_cantidad_deas,
+            "cantidad_deas_cargados": len(self.deas) if self.deas else 0,
         }
 
     def admins(self):
@@ -152,3 +167,71 @@ class EspacioObligado(Base):
             print(e)
             return None, "error al certificar el espacio obligado"
         return self, None
+
+    def cardio_asistido_con_ddjj(self):
+        if self.estado in [
+            "Cardio-Asistido Certificado",
+            "Cardio-Asisitdo Certificado Vencido",
+        ]:
+            return False
+        len_deas = len(self.deas) if self.deas else 0
+        return (
+            self.ddjj_personal_capacitado
+            and self.ddjj_senaletica_adecuada
+            and len_deas > 0
+            and len_deas == self.ddjj_cantidad_deas
+        )
+
+    def validar_ddjj(self, db):
+        if not self.cardio_asistido_con_ddjj():
+            if self.estado == "Cardio-Asistido con DDJJ":
+                self.estado = "En proceso de ser Cardio-Asistido"
+        else:
+            self.estado = "Cardio-Asistido con DDJJ"
+        try:
+            db.commit()
+            db.refresh(self)
+        except Exception as e:
+            db.rollback()
+            return (
+                None,
+                "Se cargo la ddj pero no se pudo actualizar el estado a Cardio-Asistido con DDJJ",
+            )
+        return self, None
+
+    def update_ddjj(self, ddjj, db):
+        self.ddjj_personal_capacitado = ddjj.personal_capacitado
+        self.ddjj_senaletica_adecuada = ddjj.senaletica_adecuada
+        self.ddjj_protocolo_accion = ddjj.protocolo_accion
+        self.ddjj_sistema_energia_media = ddjj.sistema_energia_media
+        self.ddjj_cantidad_deas = ddjj.cantidad_deas
+        if self.cardio_asistido_con_ddjj():
+            self.estado = "Cardio-Asistido con DDJJ"
+        try:
+            db.commit()
+            db.refresh(self)
+        except Exception as e:
+            db.rollback()
+            print(e)
+            return None, "error al cargar la ddjj"
+        return self, None
+
+    def certificado_vencido(self):
+        if not self.estado == "Cardio-Asistido Certificado":
+            return False
+        return datetime.now() > self.cardio_asistido_vence
+
+    def vencer_certificado(self, db):
+        self.estado = "Cardio-Asisitdo Certificado Vencido"
+        try:
+            db.commit()
+            db.refresh(self)
+        except Exception as e:
+            db.rollback()
+            print(e)
+            return None, "error al cambiar estado"
+        return self, None
+
+    @classmethod
+    def get_cardioasistidos_certificados(cls, db):
+        return db.query(cls).filter(cls.estado == "Cardio-Asistido Certificado").all()
