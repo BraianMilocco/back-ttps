@@ -115,7 +115,12 @@ class EspacioObligado(Base):
             sede_id=espacio_obligado.sede_id,
             estado="En proceso de ser Cardio-Asistido",
         )
-        return cls.save(espacio_obligado, db)
+        espacio, message = cls.save(espacio_obligado, db)
+        if espacio:
+            Notificacion.create(
+                f"Se creo el espacio obligado {espacio.nombre}", espacio.id, db
+            )
+        return espacio, message
 
     @classmethod
     def save(cls, espacio_obligado, db):
@@ -166,6 +171,9 @@ class EspacioObligado(Base):
             db.rollback()
             print(e)
             return None, "error al certificar el espacio obligado"
+        Notificacion.create(
+            f"Se certifico el espacio obligado {self.nombre}", self.id, db
+        )
         return self, None
 
     def cardio_asistido_con_ddjj(self):
@@ -186,6 +194,8 @@ class EspacioObligado(Base):
         if not self.cardio_asistido_con_ddjj():
             if self.estado == "Cardio-Asistido con DDJJ":
                 self.estado = "En proceso de ser Cardio-Asistido"
+            else:
+                return True, None
         else:
             self.estado = "Cardio-Asistido con DDJJ"
         try:
@@ -197,16 +207,29 @@ class EspacioObligado(Base):
                 None,
                 "Se cargo la ddj pero no se pudo actualizar el estado a Cardio-Asistido con DDJJ",
             )
+        Notificacion.create(
+            f"Se cambio el estado del espacio obligado a {self.estado}", self.id, db
+        )
         return self, None
 
     def update_ddjj(self, ddjj, db):
+        estado_cambiado = False
         self.ddjj_personal_capacitado = ddjj.personal_capacitado
         self.ddjj_senaletica_adecuada = ddjj.senaletica_adecuada
         self.ddjj_protocolo_accion = ddjj.protocolo_accion
         self.ddjj_sistema_energia_media = ddjj.sistema_energia_media
         self.ddjj_cantidad_deas = ddjj.cantidad_deas
         if self.cardio_asistido_con_ddjj():
+            estado_cambiado = True
+            mensaje_notificacion = (
+                "Se completo la ddjj y se cambio el estado a Cardio-Asistido con DDJJ"
+            )
             self.estado = "Cardio-Asistido con DDJJ"
+        else:
+            if self.estado == "Cardio-Asistido con DDJJ":
+                estado_cambiado = True
+                mensaje_notificacion = "El estado paso a En proceso de ser Cardio-Asistido por incongruencias ddjj y deas"
+                self.estado = "En proceso de ser Cardio-Asistido"
         try:
             db.commit()
             db.refresh(self)
@@ -214,6 +237,8 @@ class EspacioObligado(Base):
             db.rollback()
             print(e)
             return None, "error al cargar la ddjj"
+        if estado_cambiado:
+            Notificacion.create(mensaje_notificacion, self.id, db)
         return self, None
 
     def certificado_vencido(self):
@@ -230,6 +255,9 @@ class EspacioObligado(Base):
             db.rollback()
             print(e)
             return None, "error al cambiar estado"
+        Notificacion.create(
+            f"Se vencio el certificado del espacio obligado {self.nombre}", self.id, db
+        )
         return self, None
 
     @classmethod

@@ -31,6 +31,7 @@ from models.espacio_user import EspacioUser
 from models.responsable_sede import ResponsableSede
 from models.visita import Visita
 from models.dea import Dea
+from models.notificacion import Notificacion
 
 app = FastAPI()
 
@@ -465,11 +466,20 @@ async def activar_dea(dea_id: int, current_user: dict = Depends(get_current_user
     return {"success": True}
 
 
+@app.get("/notificaciones/")
+async def get_notificaciones(current_user: dict = Depends(get_current_user)):
+    """Retorna las notificaciones de un espacio obligado"""
+    user_has_role(current_user, "representante")
+    espacios_user = EspacioUser.get_espacios_id_user_administra(current_user["id"], db)
+    notificaciones = Notificacion.notificaciones_de_los_ultimos_dias(espacios_user, db)
+    return {"data": notificaciones}
+
+
 # Cargar Muerte Subita
-# Get Muerte Subita
+# Get Muerte Subita con incovenientes
 # Cargar inconvenientes
 # Cargar reparaciones
-# Get Notificaciones por espacio obligado
+
 if __name__ == "__main__":
     Base.metadata.create_all(bind=engine)
     print("Database tables created!")

@@ -115,12 +115,13 @@ class EspacioUser(Base):
         return False
 
     @classmethod
-    def get_espacios_id_user_administra(user_id, db):
+    def get_espacios_id_user_administra(cls, user_id, db):
         user_administra = (
             db.query(cls)
             .filter(cls.user_id == user_id)
             .filter(cls.pendiente == False)
             .filter(cls.valida == True)
+            .order_by(cls.fecha_creacion.desc())
             .all()
         )
-        return [user.espacio_id for user in user_administra]
+        return [user.espacio_id for user in user_administra] if user_administra else []

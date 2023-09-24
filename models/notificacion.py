@@ -37,3 +37,19 @@ class Notificacion(Base):
             "espacio_obligado_id": self.espacio_obligado_id,
             "espacio_obligado": self.espacio_obligado.nombre,
         }
+
+    @classmethod
+    def create(cls, text, espacio_id, db):
+        notificacion = cls(texto=text, espacio_obligado_id=espacio_id)
+        return cls.save(notificacion, db)
+
+    @classmethod
+    def save(cls, notificacion, db):
+        try:
+            db.add(notificacion)
+            db.commit()
+            db.refresh(notificacion)
+        except Exception as e:
+            db.rollback()
+            return None, str(e)
+        return notificacion, None
