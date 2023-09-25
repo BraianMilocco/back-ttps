@@ -475,6 +475,36 @@ async def get_notificaciones(current_user: dict = Depends(get_current_user)):
     return {"data": notificaciones}
 
 
+@app.post("/admin/certificar/vencido/{espacio_obligado_id}/{key}")
+async def certificar_vencido(
+    espacio_obligado_id: int,
+    key: str,
+):
+    """Para uso de admin, se usa para poder certificar un espacio obligado con una fecha
+    vencida, asi poder correr y mostrar el cron en tiempo real"""
+    if key != settings.fake_cron_key:
+        raise HTTPException(status_code=400, detail="Key invalida")
+    espacio_obligado = EspacioObligado.get_by_id(espacio_obligado_id, db=get_db())
+    if not espacio_obligado:
+        raise HTTPException(status_code=400, detail="Espacio obligado no encontrado")
+    espacio_obligado, message = espacio_obligado.certificar_vencido(db=get_db())
+    if not espacio_obligado:
+        raise HTTPException(status_code=500, detail=message)
+    return {"success": True}
+
+
+@app.post("/admin/vencer-certificado/{key}")
+async def vencer_certificado(key: str):
+    """Para uso del Cron, se usa para cambiar los estados de todos los espacios obligados
+    certificados con fecha vencida a vencidos"""
+    if key != settings.fake_cron_key:
+        raise HTTPException(status_code=400, detail="Key invalida")
+    espacios_obligados = EspacioObligado.get_vencidos(db=get_db())
+    for espacio_obligado in espacios_obligados:
+        espacio_obligado.vencer_certificado(db=get_db())
+    return {"success": True}
+
+
 # Cargar Muerte Subita
 # Get Muerte Subita con incovenientes
 # Cargar inconvenientes

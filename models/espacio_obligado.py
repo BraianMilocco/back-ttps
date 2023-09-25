@@ -248,6 +248,8 @@ class EspacioObligado(Base):
 
     def vencer_certificado(self, db):
         self.estado = "Cardio-Asisitdo Certificado Vencido"
+        self.cardio_asistido_desde = None
+        self.cardio_asistido_vence = None
         try:
             db.commit()
             db.refresh(self)
@@ -263,3 +265,31 @@ class EspacioObligado(Base):
     @classmethod
     def get_cardioasistidos_certificados(cls, db):
         return db.query(cls).filter(cls.estado == "Cardio-Asistido Certificado").all()
+
+    def certificar_vencido(self, db):
+        self.estado = "Cardio-Asisitdo Certificado"
+        self.cardio_asistido_desde = datetime.now() - timedelta(days=10)
+        self.cardio_asistido_vence = datetime.now() - timedelta(days=5)
+        try:
+            db.commit()
+            db.refresh(self)
+        except Exception as e:
+            db.rollback()
+            print(e)
+            return None, "error al cambiar estado"
+        Notificacion.create(
+            f"Se Cambio via admin el estado y la fecha del certificado {self.nombre}",
+            self.id,
+            db,
+        )
+        return self, None
+
+    @classmethod
+    def get_vencidos(cls, db):
+        """recupera los espacios con estado 'Cardio-Asistido Certificado' cuya fecha de vencimiento es mas chica a hoy"""
+        return (
+            db.query(cls)
+            .filter(cls.estado == "Cardio-Asistido Certificado")
+            .filter(cls.cardio_asistido_vence < datetime.now())
+            .all()
+        )
