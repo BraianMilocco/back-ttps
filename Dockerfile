@@ -5,17 +5,21 @@ FROM python:3.10.12
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-# Instala las dependencias
-RUN pip install --upgrade pip \
-    && pip install fastapi uvicorn
 
-# Copia el código de la aplicación al contenedor
-COPY . . 
-
-# Establece el directorio de trabajo
+# Establece el directorio de trabajo dentro del contenedor
 WORKDIR /app
 
-# Inicia la aplicación con uvicorn
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Copia el archivo de requisitos a la imagen
+COPY requirements.txt .
+
+# Instala las dependencias
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copia todo el contenido de la carpeta actual al directorio de trabajo en el contenedor
+COPY . .
+
+# Expone el puerto en el que se ejecuta la aplicación FastAPI
+EXPOSE 8080
+
 # Comando para iniciar la aplicación'
-# CMD ["gunicorn", "main:app", "--workers", "4", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8080"]
+CMD ["gunicorn", "main:app", "--workers", "4", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8080"]
