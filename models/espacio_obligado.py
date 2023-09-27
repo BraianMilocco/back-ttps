@@ -26,7 +26,7 @@ ESTADOS = [
     "En proceso de ser Cardio-Asistido",
     "Cardio-Asistido con DDJJ",
     "Cardio-Asistido Certificado",
-    "Cardio-Asisitdo Certificado Vencido",  # cuando se vence el certificado por provincia, fecha certificado + 1 año
+    # "Cardio-Asistido Certificado Vencido",  # cuando se vence el certificado por provincia, fecha certificado + 1 año
 ]
 
 
@@ -46,6 +46,7 @@ class EspacioObligado(Base):
     notificaciones = relationship(Notificacion, back_populates="espacio_obligado")
     cardio_asistido_desde = Column(DateTime, nullable=True)
     cardio_asistido_vence = Column(DateTime, nullable=True)
+    cardio_asistido_vencido = Column(Boolean, nullable=True, default=False)
     deas = relationship(Dea, back_populates="espacio_obligado")
     ddjj_personal_capacitado = Column(Boolean, nullable=True)
     ddjj_senaletica_adecuada = Column(Boolean, nullable=True)
@@ -81,7 +82,7 @@ class EspacioObligado(Base):
         return {
             "id": self.id,
             "nombre": self.nombre,
-            "estado": self.estado,
+            "estado": self.get_estado,
             "aprobado": self.aprobado,
             "cant_administradores": len(self.admins()),
             "puede_completar_ddjj_dea": self.puede_completar_ddjj_dea,
@@ -100,6 +101,13 @@ class EspacioObligado(Base):
             "cantidad_deas": self.ddjj_cantidad_deas,
             "cantidad_deas_cargados": len(self.deas) if self.deas else 0,
         }
+
+    @property
+    def get_estado(self):
+        if self.estado == "Cardio-Asistido Certificado":
+            if self.cardio_asistido_vencido:
+                return "Cardio-Asistido Certificado Vencido"
+        return self.estado
 
     def admins(self):
         return [user for user in self.users if user.valida]
@@ -164,6 +172,7 @@ class EspacioObligado(Base):
         self.cardio_asistido_vence = datetime.now() + timedelta(
             days=self.sede.provincia.dias_duracion_certificado
         )
+        self.cardio_asistido_vencido = False
         try:
             db.commit()
             db.refresh(self)
@@ -179,7 +188,7 @@ class EspacioObligado(Base):
     def cardio_asistido_con_ddjj(self):
         if self.estado in [
             "Cardio-Asistido Certificado",
-            "Cardio-Asisitdo Certificado Vencido",
+            "Cardio-Asistido Certificado Vencido",
         ]:
             return False
         len_deas = len(self.deas) if self.deas else 0
@@ -194,10 +203,12 @@ class EspacioObligado(Base):
         if not self.cardio_asistido_con_ddjj():
             if self.estado == "Cardio-Asistido con DDJJ":
                 self.estado = "En proceso de ser Cardio-Asistido"
+                self.cardio_asistido_vencido = False
             else:
                 return True, None
         else:
             self.estado = "Cardio-Asistido con DDJJ"
+            self.cardio_asistido_vencido = False
         try:
             db.commit()
             db.refresh(self)
@@ -225,11 +236,13 @@ class EspacioObligado(Base):
                 "Se completo la ddjj y se cambio el estado a Cardio-Asistido con DDJJ"
             )
             self.estado = "Cardio-Asistido con DDJJ"
+            self.cardio_asistido_vencido = False
         else:
             if self.estado == "Cardio-Asistido con DDJJ":
                 estado_cambiado = True
                 mensaje_notificacion = "El estado paso a En proceso de ser Cardio-Asistido por incongruencias ddjj y deas"
                 self.estado = "En proceso de ser Cardio-Asistido"
+                self.cardio_asistido_vencido = False
         try:
             db.commit()
             db.refresh(self)
@@ -247,9 +260,10 @@ class EspacioObligado(Base):
         return datetime.now() > self.cardio_asistido_vence
 
     def vencer_certificado(self, db):
-        self.estado = "Cardio-Asisitdo Certificado Vencido"
+        self.estado = "Cardio-Asistido Certificado"
         self.cardio_asistido_desde = None
         self.cardio_asistido_vence = None
+        self.cardio_asistido_vencido = True
         try:
             db.commit()
             db.refresh(self)
@@ -267,9 +281,10 @@ class EspacioObligado(Base):
         return db.query(cls).filter(cls.estado == "Cardio-Asistido Certificado").all()
 
     def certificar_vencido(self, db):
-        self.estado = "Cardio-Asisitdo Certificado"
+        self.estado = "Cardio-Asistido Certificado"
         self.cardio_asistido_desde = datetime.now() - timedelta(days=10)
         self.cardio_asistido_vence = datetime.now() - timedelta(days=5)
+
         try:
             db.commit()
             db.refresh(self)
