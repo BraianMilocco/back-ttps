@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
 import jwt
 from sqlalchemy.orm import Session
@@ -34,7 +35,14 @@ from models.dea import Dea
 from models.notificacion import Notificacion
 
 app = FastAPI()
-
+# Configuración del middleware CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Permite solicitudes desde cualquier origen
+    allow_credentials=True,
+    allow_methods=["*"],  # Permite todos los métodos HTTP
+    allow_headers=["*"],  # Permite todos los headers HTTP
+)
 tokenUrl = "/users/login"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=tokenUrl)
 
