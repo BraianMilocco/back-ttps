@@ -122,6 +122,7 @@ class EspacioObligado(Base):
             nombre=espacio_obligado.nombre,
             sede_id=espacio_obligado.sede_id,
             estado="En proceso de ser Cardio-Asistido",
+            cardio_asistido_vencido=False,
         )
         espacio, message = cls.save(espacio_obligado, db)
         if espacio:
