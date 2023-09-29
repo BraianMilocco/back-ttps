@@ -1,4 +1,5 @@
 import jwt
+import requests
 from datetime import datetime, timedelta
 from settings import settings
 
@@ -26,3 +27,17 @@ def get_data_from_token(payload: dict):
         "provincia_id": payload.get("provincia_id"),
         "id": payload.get("id"),
     }
+
+
+def get_dea_models():
+    headers = {
+        "Content-Type": "application/json",
+    }
+    url = "https://api.claudioraverta.com/deas/"
+    data = None
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        data = response.json()
+    else:
+        print(response.status_code)
+    return data

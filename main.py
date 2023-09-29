@@ -8,7 +8,7 @@ from db.session import SessionLocal, engine
 from settings import settings
 
 # Helpers
-from helpers import create_access_token, get_data_from_token
+from helpers import create_access_token, get_data_from_token, get_dea_models
 
 # Schemas
 from schemas.user import UserCreate, UserLogin
@@ -261,7 +261,7 @@ async def cargar_dea(
     dea_data: DeaSchema,
     current_user: dict = Depends(get_current_user),
 ):
-    """Cargar dea"""
+    """Cargar dea. El modelo espera el nombre del dea"""
     user_has_role(current_user, "representante")
     espacio_obligado = EspacioObligado.get_by_id(
         dea_data.espacio_obligado_id, db=get_db()
@@ -513,6 +513,16 @@ async def vencer_certificado(key: str):
     for espacio_obligado in espacios_obligados:
         espacio_obligado.vencer_certificado(db=get_db())
     return {"success": True}
+
+
+@app.get("/modelos/deas")
+async def get_deas_models(current_user: dict = Depends(get_current_user)):
+    """Retorna los modelos de deas tomados de la api dada"""
+    user_has_role(current_user, "representante")
+    data = get_dea_models()
+    if not data:
+        raise HTTPException(status_code=500, detail="Error al obtener modelos")
+    return {"data": data}
 
 
 # Cargar Muerte Subita
