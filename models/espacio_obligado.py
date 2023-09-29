@@ -285,7 +285,7 @@ class EspacioObligado(Base):
         self.estado = "Cardio-Asistido Certificado"
         self.cardio_asistido_desde = datetime.now() - timedelta(days=10)
         self.cardio_asistido_vence = datetime.now() - timedelta(days=5)
-
+        self.cardio_asistido_vencido = False
         try:
             db.commit()
             db.refresh(self)

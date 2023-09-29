@@ -34,6 +34,8 @@ from models.visita import Visita
 from models.dea import Dea
 from models.notificacion import Notificacion
 
+
+# CREAR MODEL MANTEMIENTO fecha, dea
 app = FastAPI()
 # Configuración del middleware CORS
 app.add_middleware(
