@@ -54,10 +54,23 @@ class Sede(Base):
         return {
             "id": self.id,
             "nombre": self.nombre,
+            "direccion": self.direccion,
             "sector": self.sector,
-            "espacio_obligado": self.espacio_obligado[0].to_dict_list()
+            "provincia_id": self.provincia_id,
+            "latitud": self.latitud,
+            "longitud": self.longitud,
+            "superficie": self.superficie,
+            "cantidad_pisos": self.cantidad_pisos,
+            "cantidad_personas_externas": self.cantidad_personas_externas,
+            "cantidad_personas_estables": self.cantidad_personas_estables,
+            "espacio_obligado": self.espacio_obligado[0].to_dict_list()["id"]
             if self.espacio_obligado
             else None,
+            "entidad":{
+                "id":self.entidad_id,
+                "cuit":self.entidad.cuit,
+                "razon_social":self.entidad.razon_social,
+            }
         }
 
     def info_completa(self):
@@ -75,6 +88,11 @@ class Sede(Base):
         ):
             return True
         return False
+    
+    def get_espacio_obligado(self):
+        if (self.espacio_obligado): 
+            return self.espacio_obligado[0]
+        return self.espacio_obligado
 
     @classmethod
     def save(cls, sede, db):
@@ -94,8 +112,6 @@ class Sede(Base):
             nombre=sede.nombre,
             numero=sede.numero,
             direccion=sede.direccion,
-            latitud=sede.latitud,
-            longitud=sede.longitud,
             provincia_id=sede.provincia_id,
             entidad_id=sede.entidad_id,
             user_id=user_id,
@@ -110,6 +126,8 @@ class Sede(Base):
         self.sector = data.sector
         self.tipo = data.tipo
         self.superficie = data.superficie
+        self.latitud=data.latitud,
+        self.longitud=data.longitud,
         self.cantidad_pisos = data.cantidad_pisos
         self.cantidad_personas_externas = data.cantidad_personas_externas
         self.cantidad_personas_estables = data.cantidad_personas_estables
