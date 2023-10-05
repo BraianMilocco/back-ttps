@@ -78,6 +78,12 @@ class EspacioObligado(Base):
 
     __table_args__ = (CheckConstraint(estado.in_(ESTADOS)),)
 
+    def to_dict_user_list(self,user_id):
+        espacio_obligado = self.to_dict_list()
+        espacio_obligado["solicitado"] = len(self.user_solicitudes(user_id))
+        espacio_obligado["sede"] = self.sede.to_dict_list()
+        return espacio_obligado
+
     def to_dict_list(self):
         return {
             "id": self.id,
@@ -85,6 +91,7 @@ class EspacioObligado(Base):
             "estado": self.get_estado,
             "aprobado": self.aprobado,
             "cant_administradores": len(self.admins()),
+            "puede_cargar_dea": self.sede.info_completa(),
             "puede_completar_ddjj_dea": self.puede_completar_ddjj_dea,
             "cardio_asistido_desde": self.cardio_asistido_desde,
             "cardio_asistido_vence": self.cardio_asistido_vence,
@@ -108,6 +115,9 @@ class EspacioObligado(Base):
             if self.cardio_asistido_vencido:
                 return "Cardio-Asistido Certificado Vencido"
         return self.estado
+
+    def user_solicitudes(self, user_id):
+        return [user.user_id for user in self.users if user.user_id == user_id]
 
     def admins(self):
         return [user for user in self.users if user.valida]
@@ -166,6 +176,10 @@ class EspacioObligado(Base):
     @classmethod
     def get_by_id(cls, espacio_obligado_id, db):
         return db.query(cls).filter(cls.id == espacio_obligado_id).first()
+
+    @classmethod
+    def get_by_sede_id(cls, sede_id, db):
+        return db.query(cls).filter(cls.sede_id == sede_id).first()
 
     def certificar(self, db):
         self.estado = "Cardio-Asistido Certificado"
