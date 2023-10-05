@@ -5,8 +5,6 @@ class Sede(BaseModel):
     nombre: str
     numero: int
     direccion: str
-    latitud: str
-    longitud: str
     provincia_id: int
     entidad_id: int
 
@@ -27,6 +25,8 @@ class SedeCompleta(BaseModel):
     sector: str
     tipo: str
     superficie: int
+    latitud: str
+    longitud: str
     cantidad_pisos: int
     cantidad_personas_externas: int
     cantidad_personas_estables: int
