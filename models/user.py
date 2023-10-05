@@ -107,3 +107,6 @@ class User(Base):
             "provincia": self.provincia.nombre if self.provincia else None,
             "provincia_id": self.provincia_id,
         }
+
+    def get_espacios(self):
+        return [espacio_user.get_espacio().to_dict_list() for espacio_user in self.espacios if espacio_user.valida == True and espacio_user.pendiente==False]
