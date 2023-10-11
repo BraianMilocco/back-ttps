@@ -61,8 +61,17 @@ class EspacioUser(Base):
         return espacio_user, None
 
     @classmethod
-    def get_pending(cls, provincia_id, db):
-        solicitudes = db.query(cls).filter(cls.pendiente == True).all()
+    def get_pending(cls, provincia_id, estado, db):
+
+        solicitudes = db.query(cls)
+
+        if (estado == 'APROBADO'):
+            solicitudes = solicitudes.filter(cls.valida == True).all()
+        elif (estado == 'RECHAZADO'):
+            solicitudes = solicitudes.filter(cls.pendiente == False).filter(cls.valida == False).all()
+        else:
+            solicitudes = solicitudes.filter(cls.pendiente == True).all()
+        
         lista_solicitudes = []
         for solicitud in solicitudes:
             if solicitud.espacio.sede.provincia_id == provincia_id:
@@ -74,6 +83,8 @@ class EspacioUser(Base):
             "espacio_id": self.espacio_id,
             "espacio_nombre": self.espacio.nombre,
             "pendiente": self.pendiente,
+            "sede": self.espacio.sede.to_dict_list(),
+            "user_id": self.user.id,
             "user": self.user.email,
             "creacion": self.fecha_creacion,
         }
@@ -125,3 +136,6 @@ class EspacioUser(Base):
             .all()
         )
         return [user.espacio_id for user in user_administra] if user_administra else []
+
+    def get_espacio(self):
+        return self.espacio

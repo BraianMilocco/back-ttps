@@ -205,17 +205,24 @@ async def create_espacio_obligado(
     )
     if not _espacio_obligado:
         raise HTTPException(status_code=400, detail=message)
-    solicitud, message = EspacioUser.create(
-        current_user["id"],
-        _espacio_obligado.id,
-        db=get_db(),
-        al_crear_espacio=True,
-    )
-    if not solicitud:
-        raise HTTPException(status_code=400, detail="Error al solicitar administracion")
 
     return {"success": True, "data": _espacio_obligado.to_dict_list()}
 
+
+@app.get("/espacios_obligados/")
+async def get_espacio_obligado(
+    sede: int = None,
+    current_user: dict = Depends(get_current_user),
+):
+    """Get espacio obligado"""
+    espacios = [];
+    if (sede):
+        espacio = EspacioObligado.get_by_sede_id(sede,db=get_db())
+        espacios = espacio.to_dict_user_list(current_user["id"])
+    else:
+        user = User.get_by_email(current_user["email"],db=get_db())
+        espacios = user.get_espacios();
+    return {"data": espacios}
 
 @app.get("/espacios_obligados/{espacio_id}/")
 async def get_espacio_obligado(
@@ -226,7 +233,7 @@ async def get_espacio_obligado(
     espacio_obligado = EspacioObligado.get_by_id(espacio_id, db=get_db())
     if not espacio_obligado:
         raise HTTPException(status_code=400, detail="Espacio obligado no encontrado")
-    return {"data": espacio_obligado.to_dict_list()}
+    return {"data": espacio_obligado.to_dict_user_list(current_user["id"])}
 
 
 @app.post("/ddjj/{espacio_obligado_id}/")
@@ -320,11 +327,13 @@ async def solicitar_administracion(
 
 @app.get("/solicitudes_administracion/")
 async def solicitudes_administracion(
+    estado: str = 'PENDIENTE',
     current_user: dict = Depends(get_current_user),
+
 ):
     """Solicitudes de administracion de espacio obligado"""
     user_has_role(current_user, "administrador_provincial")
-    solicitudes = EspacioUser.get_pending(current_user["provincia_id"], db=get_db())
+    solicitudes = EspacioUser.get_pending(current_user["provincia_id"],estado, db=get_db())
     return {"data": solicitudes}
 
 
