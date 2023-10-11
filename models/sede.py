@@ -92,7 +92,7 @@ class Sede(Base):
     def get_espacio_obligado(self):
         if (self.espacio_obligado): 
             return self.espacio_obligado[0]
-        return self.espacio_obligado
+        return None
 
     @classmethod
     def save(cls, sede, db):

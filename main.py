@@ -211,7 +211,7 @@ async def create_espacio_obligado(
 
 @app.get("/espacios_obligados/")
 async def get_espacio_obligado(
-    sede: int = 0,
+    sede: int = None,
     current_user: dict = Depends(get_current_user),
 ):
     """Get espacio obligado"""
