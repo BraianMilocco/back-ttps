@@ -4,6 +4,7 @@ from db.base import Base
 
 # from .sede import Sede
 from .muerte_subita import MuerteSubita
+from .solicitar_dea import SolicitudDea
 
 
 class ResponsableSede(Base):
@@ -17,6 +18,7 @@ class ResponsableSede(Base):
     sede_id = Column(Integer, ForeignKey("sedes.id"), nullable=False)
     sede = relationship("Sede", back_populates="responsables")
     muertes_subitas = relationship(MuerteSubita, back_populates="responsable")
+    solicitudes_deas = relationship(SolicitudDea, back_populates="responsable_sede")
 
     @classmethod
     def create(cls, data, sede_id: int, db):

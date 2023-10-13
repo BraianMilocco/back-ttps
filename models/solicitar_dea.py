@@ -1,32 +1,33 @@
-# from datetime import datetime
-# from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime
-# from sqlalchemy.orm import relationship
-# from db.base import Base
-
-# # from .espacio_obligado import EspacioObligado
-# from .reparacion_dea import ReparacionDea
+from datetime import datetime
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime
+from sqlalchemy.orm import relationship
+from db.base import Base
 
 
-# class SolicitudDea(Base):
-#     __tablename__ = "solicitudes_deas"
+class SolicitudDea(Base):
+    __tablename__ = "solicitudes_deas"
 
-#     id = Column(Integer, primary_key=True, index=True)
-#     numero_serie = Column(String, index=True, unique=True, nullable=False)
-#     nombre = Column(String, index=True, nullable=True)
-#     marca = Column(String, index=True, nullable=True)
-#     modelo = Column(String, index=True, nullable=True)
-#     solidario = Column(Boolean, default=False)
-#     atendido = Column(Boolean, default=False)
-#     fecha = Column(DateTime, default=datetime.now())
-#     fecha_atendido = Column(DateTime, nullable=True)
-#     espacio_obligado_id = Column(
-#         Integer, ForeignKey("espacios_obligados.id"), nullable=False
-#     )
-#     espacio_obligado = relationship(
-#         "EspacioObligado", back_populates="solicitudes_deas"
-#     )
-#     dea_id = Column(Integer, ForeignKey("deas.id"), nullable=True)
-#     dea = relationship("Dea", back_populates="solicitudes_deas")
+    id = Column(Integer, primary_key=True, index=True)
+    fecha = Column(DateTime, default=datetime.now())
+    latitud = Column(String, index=True, nullable=False)
+    longitud = Column(String, index=True, nullable=False)
+    atendido = Column(Boolean, default=False)
+    fecha_atendido = Column(DateTime, nullable=True)
+    espacio_obligado_id = Column(
+        Integer, ForeignKey("espacios_obligados.id"), nullable=False
+    )
+    espacio_obligado = relationship(
+        "EspacioObligado", back_populates="solicitudes_deas"
+    )
+    dea_id = Column(Integer, ForeignKey("deas.id"), nullable=True)
+    dea = relationship("Dea", back_populates="solicitudes_deas")
+    responsable_sede_id = Column(
+        Integer, ForeignKey("responsables_sedes.id"), nullable=True
+    )
+    responsable_sede = relationship(
+        "ResponsableSede", back_populates="solicitudes_deas"
+    )
+
 
 # @classmethod
 # def create(cls, data, db):

@@ -21,6 +21,7 @@ from .muerte_subita import MuerteSubita
 from .user_espacio_association import user_espacio_association
 from .espacio_user import EspacioUser
 from .notificacion import Notificacion
+from .solicitar_dea import SolicitudDea
 
 ESTADOS = [
     "En proceso de ser Cardio-Asistido",
@@ -63,6 +64,7 @@ class EspacioObligado(Base):
         EspacioUser,
         back_populates="espacio",
     )
+    solicitudes_deas = relationship(SolicitudDea, back_populates="espacio_obligado")
 
     @property
     def declaracion_jurada(self):

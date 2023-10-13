@@ -19,6 +19,7 @@ from models.incovenientes import Incovenientes
 from models.espacio_user import EspacioUser
 from models.declaracion_jurada import DeclaracionJurada
 from models.notificacion import Notificacion
+from models.solicitar_dea import SolicitudDea
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

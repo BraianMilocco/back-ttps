@@ -5,6 +5,7 @@ from db.base import Base
 
 # from .espacio_obligado import EspacioObligado
 from .reparacion_dea import ReparacionDea
+from .solicitar_dea import SolicitudDea
 
 
 class Dea(Base):
@@ -23,6 +24,7 @@ class Dea(Base):
     )
     espacio_obligado = relationship("EspacioObligado", back_populates="deas")
     reparaciones = relationship(ReparacionDea, back_populates="dea")
+    solicitudes_deas = relationship(SolicitudDea, back_populates="dea")
 
     @classmethod
     def create(cls, data, db):
