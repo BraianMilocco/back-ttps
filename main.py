@@ -29,6 +29,7 @@ from schemas.dea import DeaSchema
 from schemas.reparacion_dea import ReparacionDeaSchema
 from schemas.muerte_subita import MueteSubitaSchema
 from schemas.inconvenientes import InconvenientesSchema
+from schemas.solicitud_dea import SolicitudDeaSchema, SolicitudDeaCompletaSchema
 
 # Models
 from models.user import User
@@ -44,6 +45,7 @@ from models.notificacion import Notificacion
 from models.reparacion_dea import ReparacionDea
 from models.muerte_subita import MuerteSubita
 from models.incovenientes import Incovenientes
+from models.solicitar_dea import SolicitudDea
 
 # CREAR MODEL MANTEMIENTO fecha, dea
 app = FastAPI()
@@ -679,6 +681,7 @@ async def cargar_inconveniente(
     data: InconvenientesSchema,
     current_user: dict = Depends(get_current_user),
 ):
+    """Crea un inconveniente para una muerte subita"""
     user_has_role(current_user, "representante")
     user_is_admin = EspacioUser.user_is_admin_espacio(
         current_user["id"], espacio_obligado_id, db
@@ -701,7 +704,7 @@ async def cargar_inconveniente(
 
 @app.get("/publico/deas/{provincia_id}")
 async def get_espacio_por_provincia(provincia_id: int):
-    """Retorna los espacios obligados de una provincia"""
+    """Retorna los deas de una provincia"""
     sedes = Sede.get_by_provincia(provincia_id, db=get_db())
     data = []
     for sede in sedes:
@@ -711,12 +714,57 @@ async def get_espacio_por_provincia(provincia_id: int):
 
 @app.get("/publico/espacios/{provincia_id}")
 async def get_espacio_por_provincia(provincia_id: int):
-    """Retorna los espacios obligados de una provincia"""
+    """Retorna los espacios obligados de una provincia junto con la data de sus deas"""
     sedes = Sede.get_by_provincia(provincia_id, db=get_db())
     data = []
     for sede in sedes:
         data += sede.list_espacios()
     return {"data": data}
+
+
+@app.post("/publico/solicitar-dea/{espacio_obligado_id}")
+async def solicitar_dea(espacio_obligado_id, data: SolicitudDeaSchema):
+    """Solicitar un dea"""
+    espacio_obligado = EspacioObligado.get_by_id(espacio_obligado_id, db=get_db())
+    if not espacio_obligado:
+        raise HTTPException(status_code=400, detail="Espacio obligado no encontrado")
+    solicitud, message = SolicitudDea.create(
+        data,
+        espacio_obligado_id,
+        db=get_db(),
+    )
+    if not solicitud:
+        raise HTTPException(status_code=400, detail=message)
+
+    return {"success": True}
+
+
+@app.get("/solicitar-dea/{espacio_obligado_id}")
+async def get_solicitudes_dea(espacio_obligado_id: int):
+    """Retorna las solicitudes de dea de un espacio obligado"""
+    solicitudes = SolicitudDea.get_by_espacio_obligado(espacio_obligado_id, db=get_db())
+    return {"data": solicitudes}
+
+
+@app.put("/solicitar-dea/{solicitud_dea_id}")
+async def editar_solicitud_dea(
+    solicitud_dea_id: int,
+    data: SolicitudDeaCompletaSchema,
+    current_user: dict = Depends(get_current_user),
+):
+    user_has_role(current_user, "representante")
+    solicitud = SolicitudDea.get_by_id(solicitud_dea_id, db=get_db())
+    if not solicitud:
+        raise HTTPException(status_code=400, detail="Solicitud no encontrada")
+    user_is_admin = EspacioUser.user_is_admin_espacio(
+        current_user["id"], solicitud.espacio_obligado_id, db
+    )
+    if not user_is_admin:
+        raise HTTPException(status_code=400, detail="No es administrador del espacio")
+    solicitud, message = solicitud.update(data, db=get_db())
+    if not solicitud:
+        raise HTTPException(status_code=500, detail=message)
+    return {"data": solicitud.to_dict_list()}
 
 
 if __name__ == "__main__":

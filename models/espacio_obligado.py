@@ -340,3 +340,9 @@ class EspacioObligado(Base):
             "latitud": self.sede.latitud,
             "longitud": self.sede.longitud,
         }
+
+    def validar_dea(self, dea_id):
+        for dea in self.deas:
+            if dea.id == dea_id:
+                return True
+        return False

@@ -154,3 +154,9 @@ class Sede(Base):
         if self.espacio_obligado:
             return [espacio.to_dict_public() for espacio in self.espacio_obligado]
         return []
+
+    def validar_responsable_sede(self, responsable_sede_id):
+        for responsable in self.responsables:
+            if responsable.id == responsable_sede_id:
+                return True
+        return False

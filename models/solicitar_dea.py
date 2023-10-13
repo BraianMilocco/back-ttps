@@ -28,80 +28,67 @@ class SolicitudDea(Base):
         "ResponsableSede", back_populates="solicitudes_deas"
     )
 
+    @classmethod
+    def create(cls, data, espacio_id, db):
+        solicitud = cls(
+            latitud=data.latitud,
+            longitud=data.longitud,
+            espacio_obligado_id=espacio_id,
+        )
+        return cls.save(solicitud, db)
 
-# @classmethod
-# def create(cls, data, db):
-#     dea = cls(
-#         numero_serie=data.numero_serie,
-#         nombre=data.nombre,
-#         marca=data.marca,
-#         modelo=data.modelo,
-#         solidario=data.solidario,
-#         activo=data.activo,
-#         fecha_ultimo_mantenimiento=data.fecha_ultimo_mantenimiento,
-#         espacio_obligado_id=data.espacio_obligado_id,
-#     )
-#     return cls.save(dea, db)
+    def update(self, data, db):
+        if not self.espacio_obligado.validar_dea(data.dea_id):
+            return None, "La DEA no pertenece al espacio obligado"
+        if not self.espacio_obligado.validar_responsable_sede(data.responsable_sede_id):
+            return None, "El responsable de sede no pertenece al espacio obligado"
+        self.atendido = data.atendido
+        self.fecha_atendido = data.fecha_atendido
+        self.dea_id = data.dea_id
+        self.responsable_sede_id = data.responsable_sede_id
 
-# @classmethod
-# def save(cls, dea, db):
-#     try:
-#         db.add(dea)
-#         db.commit()
-#         db.refresh(dea)
-#     except Exception as e:
-#         db.rollback()
-#         return None, str(e)
-#     return dea, None
+        try:
+            db.commit()
+            db.refresh(self)
+        except Exception as e:
+            db.rollback()
+            return None, str(e)
+        return self, None
 
-# def to_dict_list(self):
-#     return {
-#         "id": self.id,
-#         "numero_serie": self.numero_serie,
-#         "nombre": self.nombre,
-#         "marca": self.marca,
-#         "modelo": self.modelo,
-#         "solidario": self.solidario,
-#         "activo": self.activo,
-#         "fecha_ultimo_mantenimiento": self.fecha_ultimo_mantenimiento,
-#         "espacio_id": self.espacio_obligado_id,
-#     }
+    @classmethod
+    def save(cls, solicitud, db):
+        try:
+            db.add(solicitud)
+            db.commit()
+            db.refresh(solicitud)
+        except Exception as e:
+            db.rollback()
+            return None, str(e)
+        return solicitud, None
 
-# @classmethod
-# def get_by_espacio_obligado(cls, espacio_id, db):
-#     deas = db.query(cls).filter(cls.espacio_obligado_id == espacio_id).all()
-#     return [dea.to_dict_list() for dea in deas]
+    def to_dict_list(self):
+        return {
+            "id": self.id,
+            "fecha": self.fecha,
+            "latitud": self.latitud,
+            "longitud": self.longitud,
+            "atendido": self.atendido,
+            "fecha_atendido": self.fecha_atendido,
+            "dea": self.dea.numero_serie if self.dea else None,
+            "responsable_sede": self.responsable_sede.nombre
+            if self.responsable_sede
+            else None,
+            "espacio_obligado": self.espacio_obligado.nombre
+            if self.espacio_obligado
+            else None,
+        }
 
-# @classmethod
-# def get_by_id(cls, dea_id, db):
-#     return db.query(cls).filter(cls.id == dea_id).first()
-
-# def update_activo(self, estado, db):
-#     self.activo = estado
-#     try:
-#         db.commit()
-#         db.refresh(self)
-#     except Exception as e:
-#         db.rollback()
-#         return None, str(e)
-#     return self, None
-
-# def actualizar_fecha_ultimo_mantenimiento(self, db):
-#     self.fecha_ultimo_mantenimiento = datetime.now()
-#     try:
-#         db.commit()
-#         db.refresh(self)
-#     except Exception as e:
-#         db.rollback()
-#         return None, str(e)
-#     return self, None
-
-# @classmethod
-# def delete(cls, dea, db):
-#     try:
-#         db.delete(dea)
-#         db.commit()
-#     except Exception as e:
-#         db.rollback()
-#         return None, str(e)
-#     return True, None
+    @classmethod
+    def get_by_espacio_obligado(cls, espacio_obligado_id, db):
+        solicitudes = (
+            db.query(cls).filter(cls.espacio_obligado_id == espacio_obligado_id).all()
+        )
+        data = []
+        for solicitud in solicitudes:
+            data.append(solicitud.to_dict_list())
+        return data
