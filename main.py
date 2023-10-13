@@ -148,9 +148,8 @@ async def get_entidad(entidad_id: int, current_user: dict = Depends(get_current_
 
 
 @app.get("/provincias/")
-async def get_provincias(current_user: dict = Depends(get_current_user)):
+async def get_provincias():
     """Get provincias"""
-    user_has_role(current_user, "representante")
     provincias = Provincia.get_all(db=get_db())
     return {"data": provincias}
 
@@ -739,7 +738,7 @@ async def solicitar_dea(espacio_obligado_id, data: SolicitudDeaSchema):
     return {"success": True}
 
 
-@app.get("/solicitar-dea/{espacio_obligado_id}")
+@app.get("/publico/solicitar-dea/{espacio_obligado_id}")
 async def get_solicitudes_dea(espacio_obligado_id: int):
     """Retorna las solicitudes de dea de un espacio obligado"""
     solicitudes = SolicitudDea.get_by_espacio_obligado(espacio_obligado_id, db=get_db())
@@ -752,6 +751,7 @@ async def editar_solicitud_dea(
     data: SolicitudDeaCompletaSchema,
     current_user: dict = Depends(get_current_user),
 ):
+    """Editar una solicitud de dea"""
     user_has_role(current_user, "representante")
     solicitud = SolicitudDea.get_by_id(solicitud_dea_id, db=get_db())
     if not solicitud:
