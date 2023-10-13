@@ -66,11 +66,11 @@ class Sede(Base):
             "espacio_obligado": self.espacio_obligado[0].to_dict_list()["id"]
             if self.espacio_obligado
             else None,
-            "entidad":{
-                "id":self.entidad_id,
-                "cuit":self.entidad.cuit,
-                "razon_social":self.entidad.razon_social,
-            }
+            "entidad": {
+                "id": self.entidad_id,
+                "cuit": self.entidad.cuit,
+                "razon_social": self.entidad.razon_social,
+            },
         }
 
     def info_completa(self):
@@ -88,9 +88,9 @@ class Sede(Base):
         ):
             return True
         return False
-    
+
     def get_espacio_obligado(self):
-        if (self.espacio_obligado): 
+        if self.espacio_obligado:
             return self.espacio_obligado[0]
         return None
 
@@ -126,8 +126,8 @@ class Sede(Base):
         self.sector = data.sector
         self.tipo = data.tipo
         self.superficie = data.superficie
-        self.latitud=data.latitud,
-        self.longitud=data.longitud,
+        self.latitud = (data.latitud,)
+        self.longitud = (data.longitud,)
         self.cantidad_pisos = data.cantidad_pisos
         self.cantidad_personas_externas = data.cantidad_personas_externas
         self.cantidad_personas_estables = data.cantidad_personas_estables
@@ -140,3 +140,17 @@ class Sede(Base):
             print(e)
             return None, str(e)
         return self, None
+
+    @classmethod
+    def get_by_provincia(cls, provincia_id, db):
+        return db.query(cls).filter(cls.provincia_id == provincia_id).all()
+
+    def list_deas(self):
+        if self.espacio_obligado:
+            return [dea.to_dict_list() for dea in self.espacio_obligado[0].deas]
+        return []
+
+    def list_espacios(self):
+        if self.espacio_obligado:
+            return [espacio.to_dict_public() for espacio in self.espacio_obligado]
+        return []

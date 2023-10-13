@@ -29,11 +29,33 @@ def get_data_from_token(payload: dict):
     }
 
 
-def get_dea_models():
+def get_dea_marcas():
     headers = {
         "Content-Type": "application/json",
     }
     url = "https://api.claudioraverta.com/deas/"
+    data = None
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        data = response.json()
+    else:
+        print(response.status_code)
+    return data
+
+
+def get_dea_modelos(marca):
+    headers = {
+        "Content-Type": "application/json",
+    }
+    marcas = get_dea_marcas()
+    id_dea = None
+    for dea in marcas:
+        if marca == dea["marca"]:
+            id_dea = dea["id"]
+            break
+    if not id_dea:
+        return None
+    url = f"https://api.claudioraverta.com/deas/{id_dea}/modelos/"
     data = None
     response = requests.get(url, headers=headers)
     if response.status_code == 200:

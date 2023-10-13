@@ -78,7 +78,7 @@ class EspacioObligado(Base):
 
     __table_args__ = (CheckConstraint(estado.in_(ESTADOS)),)
 
-    def to_dict_user_list(self,user_id):
+    def to_dict_user_list(self, user_id):
         espacio_obligado = self.to_dict_list()
         espacio_obligado["solicitado"] = len(self.user_solicitudes(user_id))
         espacio_obligado["sede"] = self.sede.to_dict_list()
@@ -323,3 +323,18 @@ class EspacioObligado(Base):
             .filter(cls.cardio_asistido_vence < datetime.now())
             .all()
         )
+
+    def to_dict_public(self):
+        deas = [dea.to_dict_list() for dea in self.deas] if self.deas else None
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "estado": self.get_estado,
+            "aprobado": self.aprobado,
+            "cant_administradores": len(self.admins()),
+            "cardio_asistido_desde": self.cardio_asistido_desde,
+            "cardio_asistido_vence": self.cardio_asistido_vence,
+            "deas": deas,
+            "latitud": self.sede.latitud,
+            "longitud": self.sede.longitud,
+        }

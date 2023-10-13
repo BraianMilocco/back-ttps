@@ -59,6 +59,7 @@ class Dea(Base):
             "solidario": self.solidario,
             "activo": self.activo,
             "fecha_ultimo_mantenimiento": self.fecha_ultimo_mantenimiento,
+            "espacio_id": self.espacio_obligado_id,
         }
 
     @classmethod
@@ -89,3 +90,13 @@ class Dea(Base):
             db.rollback()
             return None, str(e)
         return self, None
+
+    @classmethod
+    def delete(cls, dea, db):
+        try:
+            db.delete(dea)
+            db.commit()
+        except Exception as e:
+            db.rollback()
+            return None, str(e)
+        return True, None

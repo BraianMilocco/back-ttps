@@ -8,7 +8,12 @@ from db.session import SessionLocal, engine
 from settings import settings
 
 # Helpers
-from helpers import create_access_token, get_data_from_token, get_dea_models
+from helpers import (
+    create_access_token,
+    get_data_from_token,
+    get_dea_marcas,
+    get_dea_modelos,
+)
 
 # Schemas
 from schemas.user import UserCreate, UserLogin
@@ -21,6 +26,9 @@ from schemas.sede import Sede as SedeSchema, SedeCompleta as SedeCompletaSchema
 from schemas.responsables import ResponsablesSchema
 from schemas.visita import Visita as VisitaSchema
 from schemas.dea import DeaSchema
+from schemas.reparacion_dea import ReparacionDeaSchema
+from schemas.muerte_subita import MueteSubitaSchema
+from schemas.inconvenientes import InconvenientesSchema
 
 # Models
 from models.user import User
@@ -33,18 +41,21 @@ from models.responsable_sede import ResponsableSede
 from models.visita import Visita
 from models.dea import Dea
 from models.notificacion import Notificacion
-
+from models.reparacion_dea import ReparacionDea
+from models.muerte_subita import MuerteSubita
+from models.incovenientes import Incovenientes
 
 # CREAR MODEL MANTEMIENTO fecha, dea
 app = FastAPI()
 # Configuración del middleware CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Permite solicitudes desde cualquier origen
-    allow_credentials=True,
-    allow_methods=["*"],  # Permite todos los métodos HTTP
-    allow_headers=["*"],  # Permite todos los headers HTTP
+    allow_origins=["*"],
+    # allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
+
 tokenUrl = "/users/login"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=tokenUrl)
 
@@ -215,14 +226,15 @@ async def get_espacio_obligado(
     current_user: dict = Depends(get_current_user),
 ):
     """Get espacio obligado"""
-    espacios = [];
-    if (sede):
-        espacio = EspacioObligado.get_by_sede_id(sede,db=get_db())
+    espacios = []
+    if sede:
+        espacio = EspacioObligado.get_by_sede_id(sede, db=get_db())
         espacios = espacio.to_dict_user_list(current_user["id"])
     else:
-        user = User.get_by_email(current_user["email"],db=get_db())
-        espacios = user.get_espacios();
+        user = User.get_by_email(current_user["email"], db=get_db())
+        espacios = user.get_espacios()
     return {"data": espacios}
+
 
 @app.get("/espacios_obligados/{espacio_id}/")
 async def get_espacio_obligado(
@@ -303,6 +315,34 @@ async def get_deas(espacio_obligado_id: int):
     return {"data": deas}
 
 
+@app.delete("/deas/{espacio_obligado_id}/{dea_id}")
+async def delete_dea(
+    espacio_obligado_id: int,
+    dea_id: int,
+    current_user: dict = Depends(get_current_user),
+):
+    """Delete dea"""
+    user_has_role(current_user, "representante")
+    user_is_admin = EspacioUser.user_is_admin_espacio(
+        current_user["id"], espacio_obligado_id, db
+    )
+    espacio_obligado = EspacioObligado.get_by_id(espacio_obligado_id, db=get_db())
+    if not espacio_obligado:
+        raise HTTPException(status_code=400, detail="Espacio obligado no encontrado")
+    if not user_is_admin:
+        raise HTTPException(status_code=400, detail="No es administrador del espacio")
+    dea = Dea.get_by_id(dea_id, db=get_db())
+    if not dea:
+        raise HTTPException(status_code=400, detail="Dea no encontrado")
+    dea, message = Dea.delete(dea, db=get_db())
+    if not dea:
+        raise HTTPException(status_code=500, detail=message)
+    estado_actualizado, message = espacio_obligado.validar_ddjj(db=get_db())
+    if not estado_actualizado:
+        raise HTTPException(status_code=500, detail=message)
+    return {"success": True}
+
+
 @app.post("/solicitar_administracion/{espacio_obligado_id}/")
 async def solicitar_administracion(
     espacio_obligado_id: int,
@@ -327,13 +367,14 @@ async def solicitar_administracion(
 
 @app.get("/solicitudes_administracion/")
 async def solicitudes_administracion(
-    estado: str = 'PENDIENTE',
+    estado: str = "PENDIENTE",
     current_user: dict = Depends(get_current_user),
-
 ):
     """Solicitudes de administracion de espacio obligado"""
     user_has_role(current_user, "administrador_provincial")
-    solicitudes = EspacioUser.get_pending(current_user["provincia_id"],estado, db=get_db())
+    solicitudes = EspacioUser.get_pending(
+        current_user["provincia_id"], estado, db=get_db()
+    )
     return {"data": solicitudes}
 
 
@@ -466,9 +507,55 @@ async def activar_dea(
     return {"success": True}
 
 
+@app.post("/reparacion/dea/{dea_id}/")
+async def post_reparacion_dea(
+    dea_id: int,
+    data: ReparacionDeaSchema,
+    current_user: dict = Depends(get_current_user),
+):
+    """Carga una reparacion a un dea"""
+    user_has_role(current_user, "representante")
+    dea = Dea.get_by_id(dea_id, db=get_db())
+    if not dea:
+        raise HTTPException(status_code=400, detail="Dea no encontrado")
+
+    user_is_admin = EspacioUser.user_is_admin_espacio(
+        current_user["id"], dea.espacio_obligado_id, db
+    )
+    if not user_is_admin:
+        raise HTTPException(status_code=400, detail="No es administrador del espacio")
+    reparacion_dea, message = ReparacionDea.create(data, dea_id, db)
+    if not reparacion_dea:
+        raise HTTPException(status_code=500, detail=message)
+    return {"data": reparacion_dea.to_dict_list()}
+
+
+@app.get("/reparacion/dea/{dea_id}/")
+async def get_reparacion_dea(
+    dea_id: int,
+    current_user: dict = Depends(get_current_user),
+):
+    """Carga una reparacion a un dea"""
+    user_has_role(current_user, "representante")
+    dea = Dea.get_by_id(dea_id, db=get_db())
+    if not dea:
+        raise HTTPException(status_code=400, detail="Dea no encontrado")
+
+    user_is_admin = EspacioUser.user_is_admin_espacio(
+        current_user["id"], dea.espacio_obligado_id, db
+    )
+    if not user_is_admin:
+        raise HTTPException(status_code=400, detail="No es administrador del espacio")
+
+    reparaciones = ReparacionDea.get_by_dea_dict(dea_id, db)
+    return {"data": reparaciones}
+
+
 @app.post("/mantenimiento/dea/{dea_id}/")
-async def activar_dea(dea_id: int, current_user: dict = Depends(get_current_user)):
-    """ "Activa o desactiva un dea"""
+async def mantenimiento_dea(
+    dea_id: int, current_user: dict = Depends(get_current_user)
+):
+    """actualiza fecha de mantenimiento dea"""
     user_has_role(current_user, "representante")
     dea = Dea.get_by_id(dea_id, db=get_db())
     if not dea:
@@ -524,20 +611,113 @@ async def vencer_certificado(key: str):
     return {"success": True}
 
 
-@app.get("/modelos/deas")
-async def get_deas_models(current_user: dict = Depends(get_current_user)):
-    """Retorna los modelos de deas tomados de la api dada"""
+@app.get("/marcas/deas")
+async def get_deas_marcas(current_user: dict = Depends(get_current_user)):
+    """Retorna los marcas de deas tomados de la api dada"""
     user_has_role(current_user, "representante")
-    data = get_dea_models()
+    data = get_dea_marcas()
     if not data:
         raise HTTPException(status_code=500, detail="Error al obtener modelos")
     return {"data": data}
 
 
-# Cargar Muerte Subita
-# Get Muerte Subita con incovenientes
-# Cargar inconvenientes
-# Cargar reparaciones
+@app.get("/modelos/deas/{marca}")
+async def get_deas_modelos(marca: str, current_user: dict = Depends(get_current_user)):
+    """Retorna los modelos validas para una marca especifica"""
+    user_has_role(current_user, "representante")
+    data = get_dea_modelos(marca)
+    if not data:
+        raise HTTPException(status_code=500, detail="Error al obtener modelos")
+    return {"data": data}
+
+
+@app.get("/muerte-subita/sexos/")
+async def get_sexos_muerte_subita():
+    """Returna los sexos posibles al cargar una muerte subita"""
+    return ["Masculino", "Femenino", "X"]
+
+
+@app.post("/muerte-subita/{espacio_obligado_id}")
+async def cargar_muerte_subita(
+    espacio_obligado_id: int,
+    data: MueteSubitaSchema,
+    current_user: dict = Depends(get_current_user),
+):
+    """Crea una muerte subita"""
+    user_has_role(current_user, "representante")
+    user_is_admin = EspacioUser.user_is_admin_espacio(
+        current_user["id"], espacio_obligado_id, db
+    )
+    if not user_is_admin:
+        raise HTTPException(status_code=400, detail="No es administrador del espacio")
+    muerte_subita, message = MuerteSubita.create(
+        data, espacio_obligado_id, current_user["id"], db
+    )
+    if not muerte_subita:
+        raise HTTPException(status_code=500, detail=message)
+    return {"data": muerte_subita.to_dict_list()}
+
+
+@app.get("/muerte-subita/{espacio_obligado_id}")
+async def get_muertes_subitas(
+    espacio_obligado_id: int, current_user: dict = Depends(get_current_user)
+):
+    user_has_role(current_user, "representante")
+    user_is_admin = EspacioUser.user_is_admin_espacio(
+        current_user["id"], espacio_obligado_id, db
+    )
+    if not user_is_admin:
+        raise HTTPException(status_code=400, detail="No es administrador del espacio")
+    muertes_buitas = MuerteSubita.get_from_espacio(espacio_obligado_id, db)
+    return {"data": muertes_buitas}
+
+
+@app.post("/inconvenientes/{espacio_obligado_id}/{muerte_subita_id}")
+async def cargar_inconveniente(
+    espacio_obligado_id: int,
+    muerte_subita_id: int,
+    data: InconvenientesSchema,
+    current_user: dict = Depends(get_current_user),
+):
+    user_has_role(current_user, "representante")
+    user_is_admin = EspacioUser.user_is_admin_espacio(
+        current_user["id"], espacio_obligado_id, db
+    )
+    if not user_is_admin:
+        raise HTTPException(status_code=400, detail="No es administrador del espacio")
+    muerte_subita = MuerteSubita.get_from_id_and_espacio(
+        muerte_subita_id, espacio_obligado_id, db
+    )
+    if not muerte_subita:
+        raise HTTPException(status_code=400, detail="Muerte subita no encontrada")
+    inconveniente, message = Incovenientes.create(data, muerte_subita_id, db)
+    if not inconveniente:
+        raise HTTPException(status_code=500, detail=message)
+    return {"data": inconveniente.to_dict_list()}
+
+
+###### AHORA VIENEN ALGUNOS QUE PUEDEN SERVIR PARA LA APP DEL CIUDADANO
+
+
+@app.get("/publico/deas/{provincia_id}")
+async def get_espacio_por_provincia(provincia_id: int):
+    """Retorna los espacios obligados de una provincia"""
+    sedes = Sede.get_by_provincia(provincia_id, db=get_db())
+    data = []
+    for sede in sedes:
+        data += sede.list_deas()
+    return {"data": data}
+
+
+@app.get("/publico/espacios/{provincia_id}")
+async def get_espacio_por_provincia(provincia_id: int):
+    """Retorna los espacios obligados de una provincia"""
+    sedes = Sede.get_by_provincia(provincia_id, db=get_db())
+    data = []
+    for sede in sedes:
+        data += sede.list_espacios()
+    return {"data": data}
+
 
 if __name__ == "__main__":
     Base.metadata.create_all(bind=engine)

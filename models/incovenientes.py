@@ -25,3 +25,39 @@ class Incovenientes(Base):
         Integer, ForeignKey("muertes_subitas.id"), nullable=False, unique=True
     )
     muerte_subita = relationship("MuerteSubita", back_populates="incovenientes")
+
+    @classmethod
+    def create(cls, data, muerte_subita_id, db):
+        inconveniente = cls(
+            muerte_subita_id=muerte_subita_id,
+            fecha=data.fecha,
+            falta_insumos=data.falta_insumos,
+            estaba_en_sitio=data.estaba_en_sitio,
+            respondio_con_descargas_electricas=data.respondio_con_descargas_electricas,
+            cantidad_de_descargas=data.cantidad_de_descargas,
+            extra_info=data.extra_info,
+        )
+        return cls.save(inconveniente, db)
+
+    @classmethod
+    def save(cls, inconveniente, db):
+        try:
+            db.add(inconveniente)
+            db.commit()
+            db.refresh(inconveniente)
+        except Exception as e:
+            db.rollback()
+            return None, str(e)
+        return inconveniente, None
+
+    def to_dict_list(self):
+        return {
+            "id": self.id,
+            "fecha": self.fecha,
+            "falta_insumos": self.falta_insumos,
+            "estaba_en_sitio": self.estaba_en_sitio,
+            "respondio_con_descargas_electricas": self.respondio_con_descargas_electricas,
+            "cantidad_de_descargas": self.cantidad_de_descargas,
+            "extra_info": self.extra_info,
+            "muerte_subita_id": self.muerte_subita_id,
+        }
