@@ -30,12 +30,14 @@ class MueteSubitaSchema(BaseModel):
             raise ValueError("La edad no puede ser negativa")
         return value
 
-    @validator("tiempo_rcp")
-    def validate_tiempo_rcp(cls, value):
-        if value < 0:
-            raise ValueError("El tiempo de RCP no puede ser negativo")
-        if not cls.rcp:
+    @validator(
+        "tiempo_rcp", pre=True, always=True
+    )  # 'always=True' asegura que el validador se ejecute siempre
+    def validate_tiempo_rcp(cls, value, values):
+        if "rcp" in values and not values["rcp"] and value != 0:
             raise ValueError(
                 "No se puede establecer un tiempo de RCP si no se realizó RCP"
             )
+        if value < 0:
+            raise ValueError("El tiempo de RCP no puede ser negativo")
         return value

@@ -38,10 +38,14 @@ class SolicitudDea(Base):
         return cls.save(solicitud, db)
 
     def update(self, data, db):
-        if not self.espacio_obligado.validar_dea(data.dea_id):
-            return None, "La DEA no pertenece al espacio obligado"
-        if not self.espacio_obligado.validar_responsable_sede(data.responsable_sede_id):
-            return None, "El responsable de sede no pertenece al espacio obligado"
+        if data.dea_id:
+            if not self.espacio_obligado.validar_dea(data.dea_id):
+                return None, "La DEA no pertenece al espacio obligado"
+        if data.responsable_sede_id:
+            if not self.espacio_obligado.validar_responsable_sede(
+                data.responsable_sede_id
+            ):
+                return None, "El responsable de sede no pertenece al espacio obligado"
         self.atendido = data.atendido
         self.fecha_atendido = data.fecha_atendido
         self.dea_id = data.dea_id
@@ -92,3 +96,7 @@ class SolicitudDea(Base):
         for solicitud in solicitudes:
             data.append(solicitud.to_dict_list())
         return data
+
+    @classmethod
+    def get_by_id(cls, solicitud_id, db):
+        return db.query(cls).filter(cls.id == solicitud_id).first()

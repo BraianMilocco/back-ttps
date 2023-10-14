@@ -68,7 +68,9 @@ class MuerteSubita(Base):
 
     def to_dict_list(self):
         inconvenientes = (
-            [i.to_dict() for i in self.incovenientes] if self.incovenientes else None
+            [i.to_dict_list() for i in self.incovenientes]
+            if self.incovenientes
+            else None
         )
         return {
             "id": self.id,

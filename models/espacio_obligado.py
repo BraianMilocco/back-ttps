@@ -346,3 +346,6 @@ class EspacioObligado(Base):
             if dea.id == dea_id:
                 return True
         return False
+
+    def validar_responsable_sede(self, responsable_sede_id):
+        return self.sede.validar_responsable_sede(responsable_sede_id)
