@@ -34,14 +34,22 @@ class DeaSchema(BaseModel):
             raise ValueError("La Marca no es válido")
         return value
 
-    @validator("modelo")
-    def validate_modelo(cls, value):
+    @validator("modelo", pre=True, always=True)
+    def validate_modelo(cls, value, values):
         if not value:
             raise ValueError("El Modelo no puede ser vacío")
-        modelos = get_dea_modelos(cls.marca)
+
+        # Verificar si 'marca' ha sido validado y está disponible en 'values'
+        marca = values.get("marca")
+        if not marca:
+            raise ValueError("La marca no está presente o no ha sido validada")
+
+        modelos = get_dea_modelos(marca)
         if not modelos:
             raise ValueError("No se pudo validar el modelo de DEA")
+
         modelos_names = [modelo["nombre"] for modelo in modelos]
         if value not in modelos_names:
             raise ValueError("El Modelo no es válido")
+
         return value
