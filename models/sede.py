@@ -126,8 +126,8 @@ class Sede(Base):
         self.sector = data.sector
         self.tipo = data.tipo
         self.superficie = data.superficie
-        self.latitud = (data.latitud,)
-        self.longitud = (data.longitud,)
+        self.latitud = data.latitud
+        self.longitud = data.longitud
         self.cantidad_pisos = data.cantidad_pisos
         self.cantidad_personas_externas = data.cantidad_personas_externas
         self.cantidad_personas_estables = data.cantidad_personas_estables

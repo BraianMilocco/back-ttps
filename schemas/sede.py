@@ -42,7 +42,7 @@ class SedeCompleta(BaseModel):
             raise ValueError("debe ser un número positivo")
         return value
 
-    @validator("sector", "tipo")
+    @validator("sector")
     def validate_sector(cls, value):
         SECTORES = ["publico", "privado"]
         if value not in SECTORES:
