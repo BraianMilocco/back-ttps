@@ -17,7 +17,7 @@ class Dea(Base):
     marca = Column(String, index=True, nullable=True)
     modelo = Column(String, index=True, nullable=True)
     solidario = Column(Boolean, default=False)
-    activo = Column(Boolean, default=False)
+    activo = Column(Boolean, default=True)
     fecha_ultimo_mantenimiento = Column(DateTime, nullable=True)
     espacio_obligado_id = Column(
         Integer, ForeignKey("espacios_obligados.id"), nullable=False

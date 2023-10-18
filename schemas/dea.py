@@ -9,7 +9,7 @@ class DeaSchema(BaseModel):
     marca: str
     modelo: str
     solidario: bool
-    activo: bool
+    activo: bool = True
     fecha_ultimo_mantenimiento: datetime = None
     espacio_obligado_id: int
 
