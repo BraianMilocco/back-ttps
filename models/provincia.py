@@ -27,4 +27,4 @@ class Provincia(Base):
     @classmethod
     def get_id_from_nombre(cls, nombre, db):
         provincia = db.query(cls).filter(cls.nombre == nombre).first()
-        return provincia.id
+        return provincia.id if provincia else 1
