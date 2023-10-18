@@ -23,3 +23,8 @@ class Provincia(Base):
 
     def to_dict_list(self):
         return {"id": self.id, "nombre": self.nombre}
+
+    @classmethod
+    def get_id_from_nombre(cls, nombre, db):
+        provincia = db.query(cls).filter(cls.nombre == nombre).first()
+        return provincia.id

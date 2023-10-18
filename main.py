@@ -767,6 +767,29 @@ async def editar_solicitud_dea(
     return {"data": solicitud.to_dict_list()}
 
 
+import requests
+import urllib
+
+
+@app.get("/publico/provincia")
+def get_pronvicia_id(lat: str, lon: str):
+    API_BASE_URL = "https://apis.datos.gob.ar/georef/api/ubicacion"
+    data = {"ubicaciones": [{"lat": lat, "lon": lon, "aplanar": True}]}
+    results = requests.post(
+        API_BASE_URL, json=data, headers={"Content-Type": "application/json"}
+    ).json()
+    parsed_results = [
+        single_result["ubicacion"] if single_result["ubicacion"] else {}
+        for single_result in results["resultados"]
+    ]
+    try:
+        result = parsed_results[0]["provincia_nombre"]
+    except Exception:
+        result = "Buenos Aires"
+    id_provincia = Provincia.get_id_from_nombre(result, db=get_db())
+    return id_provincia
+
+
 if __name__ == "__main__":
     Base.metadata.create_all(bind=engine)
     print("Database tables created!")
