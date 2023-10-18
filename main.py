@@ -720,6 +720,8 @@ async def get_espacio_por_provincia(
     data = []
     for sede in sedes:
         data += sede.list_espacios(lat, lon)
+
+    data = sorted(data, key=lambda k: k["distancia"] )
     return {"data": data}
 
 

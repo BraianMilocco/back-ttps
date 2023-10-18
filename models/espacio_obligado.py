@@ -336,7 +336,7 @@ class EspacioObligado(Base):
             b = (lat_sede, lon_sede)
             distancia = geodesic(a, b).kilometers
         except:
-            distancia = None
+            distancia = 7695.114243955209
         return {
             "id": self.id,
             "nombre": self.nombre,
