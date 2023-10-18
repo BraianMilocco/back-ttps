@@ -712,12 +712,14 @@ async def get_espacio_por_provincia(provincia_id: int):
 
 
 @app.get("/publico/espacios/{provincia_id}")
-async def get_espacio_por_provincia(provincia_id: int):
+async def get_espacio_por_provincia(
+    provincia_id: int, lat: str = None, lon: str = None
+):
     """Retorna los espacios obligados de una provincia junto con la data de sus deas"""
     sedes = Sede.get_by_provincia(provincia_id, db=get_db())
     data = []
     for sede in sedes:
-        data += sede.list_espacios()
+        data += sede.list_espacios(lat, lon)
     return {"data": data}
 
 

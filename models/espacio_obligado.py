@@ -11,6 +11,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 from db.base import Base
 from datetime import datetime
+from geopy.distance import geodesic
 
 # from models.sede import Sede
 from .dea import Dea
@@ -326,8 +327,16 @@ class EspacioObligado(Base):
             .all()
         )
 
-    def to_dict_public(self):
+    def to_dict_public(self, lat=None, lon=None):
         deas = [dea.to_dict_list() for dea in self.deas] if self.deas else None
+        lat_sede = self.sede.latitud
+        lon_sede = self.sede.longitud
+        try:
+            a = (lat, lon)
+            b = (lat_sede, lon_sede)
+            distancia = geodesic(a, b).kilometers
+        except:
+            distancia = None
         return {
             "id": self.id,
             "nombre": self.nombre,
@@ -339,6 +348,7 @@ class EspacioObligado(Base):
             "deas": deas,
             "latitud": self.sede.latitud,
             "longitud": self.sede.longitud,
+            "distancia": distancia,
         }
 
     def validar_dea(self, dea_id):

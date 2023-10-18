@@ -150,9 +150,11 @@ class Sede(Base):
             return [dea.to_dict_list() for dea in self.espacio_obligado[0].deas]
         return []
 
-    def list_espacios(self):
+    def list_espacios(self, lat=None, lon=None):
         if self.espacio_obligado:
-            return [espacio.to_dict_public() for espacio in self.espacio_obligado]
+            return [
+                espacio.to_dict_public(lat, lon) for espacio in self.espacio_obligado
+            ]
         return []
 
     def validar_responsable_sede(self, responsable_sede_id):
