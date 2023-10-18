@@ -331,12 +331,15 @@ class EspacioObligado(Base):
         deas = [dea.to_dict_list() for dea in self.deas] if self.deas else None
         lat_sede = self.sede.latitud
         lon_sede = self.sede.longitud
-        try:
-            a = (lat, lon)
-            b = (lat_sede, lon_sede)
-            distancia = geodesic(a, b).kilometers
-        except:
+        if not lat_sede or not lon_sede or not lat or not lon:
             distancia = 7695.114243955209
+        else:
+            try:
+                a = (lat, lon)
+                b = (lat_sede, lon_sede)
+                distancia = geodesic(a, b).kilometers
+            except:
+                distancia = 7695.114243955209
         return {
             "id": self.id,
             "nombre": self.nombre,
