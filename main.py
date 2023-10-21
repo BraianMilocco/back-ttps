@@ -58,7 +58,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-tokenUrl = "/users/login"
+tokenUrl = "/login/"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=tokenUrl)
 
 
@@ -721,7 +721,7 @@ async def get_espacio_por_provincia(
     for sede in sedes:
         data += sede.list_espacios(lat, lon)
 
-    data = sorted(data, key=lambda k: k["distancia"] )
+    data = sorted(data, key=lambda k: k["distancia"])
     return {"data": data}
 
 
