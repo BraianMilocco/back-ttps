@@ -306,7 +306,7 @@ async def cargar_dea(
     return {"data": dea.to_dict_list()}
 
 
-@app.get("/deas/{espacio_obligado_id}")
+@app.get("/deas/{espacio_obligado_id}/")
 async def get_deas(espacio_obligado_id: int):
     """Get deas de un espacio obligado"""
     espacio_obligado = EspacioObligado.get_by_id(espacio_obligado_id, db=get_db())
@@ -316,7 +316,7 @@ async def get_deas(espacio_obligado_id: int):
     return {"data": deas}
 
 
-@app.delete("/deas/{espacio_obligado_id}/{dea_id}")
+@app.delete("/deas/{espacio_obligado_id}/{dea_id}/")
 async def delete_dea(
     espacio_obligado_id: int,
     dea_id: int,
@@ -406,7 +406,7 @@ async def aceptar_administracion(
     return {"success": True}
 
 
-@app.get("/responsables/{sede_id}")
+@app.get("/responsables/{sede_id}/")
 async def get_responsables(
     sede_id: int, current_user: dict = Depends(get_current_user)
 ):
@@ -419,7 +419,7 @@ async def get_responsables(
     return {"data": responsables}
 
 
-@app.post("/responsables/{sede_id}")
+@app.post("/responsables/{sede_id}/")
 async def crear_responsables(
     sede_id: int,
     data: ResponsablesSchema,
@@ -582,7 +582,7 @@ async def get_notificaciones(current_user: dict = Depends(get_current_user)):
     return {"data": notificaciones}
 
 
-@app.post("/admin/certificar/vencido/{espacio_obligado_id}/{key}")
+@app.post("/admin/certificar/vencido/{espacio_obligado_id}/{key}/")
 async def certificar_vencido(
     espacio_obligado_id: int,
     key: str,
@@ -600,7 +600,7 @@ async def certificar_vencido(
     return {"success": True}
 
 
-@app.post("/admin/vencer-certificado/{key}")
+@app.post("/admin/vencer-certificado/{key}/")
 async def vencer_certificado(key: str):
     """Para uso del Cron, se usa para cambiar los estados de todos los espacios obligados
     certificados con fecha vencida a vencidos"""
@@ -612,7 +612,7 @@ async def vencer_certificado(key: str):
     return {"success": True}
 
 
-@app.get("/marcas/deas")
+@app.get("/marcas/deas/")
 async def get_deas_marcas(current_user: dict = Depends(get_current_user)):
     """Retorna los marcas de deas tomados de la api dada"""
     user_has_role(current_user, "representante")
@@ -622,7 +622,7 @@ async def get_deas_marcas(current_user: dict = Depends(get_current_user)):
     return {"data": data}
 
 
-@app.get("/modelos/deas/{marca}")
+@app.get("/modelos/deas/{marca}/")
 async def get_deas_modelos(marca: str, current_user: dict = Depends(get_current_user)):
     """Retorna los modelos validas para una marca especifica"""
     user_has_role(current_user, "representante")
@@ -638,7 +638,7 @@ async def get_sexos_muerte_subita():
     return ["Masculino", "Femenino", "X"]
 
 
-@app.post("/muerte-subita/{espacio_obligado_id}")
+@app.post("/muerte-subita/{espacio_obligado_id}/")
 async def cargar_muerte_subita(
     espacio_obligado_id: int,
     data: MueteSubitaSchema,
@@ -659,7 +659,7 @@ async def cargar_muerte_subita(
     return {"data": muerte_subita.to_dict_list()}
 
 
-@app.get("/muerte-subita/{espacio_obligado_id}")
+@app.get("/muerte-subita/{espacio_obligado_id}/")
 async def get_muertes_subitas(
     espacio_obligado_id: int, current_user: dict = Depends(get_current_user)
 ):
@@ -673,7 +673,7 @@ async def get_muertes_subitas(
     return {"data": muertes_buitas}
 
 
-@app.post("/inconvenientes/{espacio_obligado_id}/{muerte_subita_id}")
+@app.post("/inconvenientes/{espacio_obligado_id}/{muerte_subita_id}/")
 async def cargar_inconveniente(
     espacio_obligado_id: int,
     muerte_subita_id: int,
@@ -701,7 +701,7 @@ async def cargar_inconveniente(
 ###### AHORA VIENEN ALGUNOS QUE PUEDEN SERVIR PARA LA APP DEL CIUDADANO
 
 
-@app.get("/publico/deas/{provincia_id}")
+@app.get("/publico/deas/{provincia_id}/")
 async def get_espacio_por_provincia(provincia_id: int):
     """Retorna los deas de una provincia"""
     sedes = Sede.get_by_provincia(provincia_id, db=get_db())
@@ -711,7 +711,7 @@ async def get_espacio_por_provincia(provincia_id: int):
     return {"data": data}
 
 
-@app.get("/publico/espacios/{provincia_id}")
+@app.get("/publico/espacios/{provincia_id}/")
 async def get_espacio_por_provincia(
     provincia_id: int, lat: str = None, lon: str = None
 ):
@@ -725,7 +725,7 @@ async def get_espacio_por_provincia(
     return {"data": data}
 
 
-@app.post("/publico/solicitar-dea/{espacio_obligado_id}")
+@app.post("/publico/solicitar-dea/{espacio_obligado_id}/")
 async def solicitar_dea(espacio_obligado_id, data: SolicitudDeaSchema):
     """Solicitar un dea"""
     espacio_obligado = EspacioObligado.get_by_id(espacio_obligado_id, db=get_db())
@@ -742,14 +742,14 @@ async def solicitar_dea(espacio_obligado_id, data: SolicitudDeaSchema):
     return {"success": True}
 
 
-@app.get("/publico/solicitar-dea/{espacio_obligado_id}")
+@app.get("/publico/solicitar-dea/{espacio_obligado_id}/")
 async def get_solicitudes_dea(espacio_obligado_id: int):
     """Retorna las solicitudes de dea de un espacio obligado"""
     solicitudes = SolicitudDea.get_by_espacio_obligado(espacio_obligado_id, db=get_db())
     return {"data": solicitudes}
 
 
-@app.put("/solicitar-dea/{solicitud_dea_id}")
+@app.put("/solicitar-dea/{solicitud_dea_id}/")
 async def editar_solicitud_dea(
     solicitud_dea_id: int,
     data: SolicitudDeaCompletaSchema,
@@ -775,7 +775,7 @@ import requests
 import urllib
 
 
-@app.get("/publico/provincia")
+@app.get("/publico/provincia/")
 def get_pronvicia_id(lat: str, lon: str):
     API_BASE_URL = "https://apis.datos.gob.ar/georef/api/ubicacion"
     data = {"ubicaciones": [{"lat": lat, "lon": lon, "aplanar": True}]}
