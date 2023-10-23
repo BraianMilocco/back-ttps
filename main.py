@@ -1,4 +1,12 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import (
+    FastAPI,
+    Depends,
+    HTTPException,
+    status,
+    WebSocket,
+    WebSocketDisconnect,
+)
+from typing import Dict, List
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
 import jwt
@@ -60,6 +68,36 @@ app.add_middleware(
 
 tokenUrl = "/login/"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=tokenUrl)
+
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: Dict[str, List[WebSocket]] = {}
+
+    async def connect(self, websocket: WebSocket, room_id: str):
+        await websocket.accept()
+        if room_id in self.active_connections:
+            self.active_connections[room_id].append(websocket)
+        else:
+            self.active_connections[room_id] = [websocket]
+
+    def disconnect(self, websocket: WebSocket, room_id: str):
+        if room_id in self.active_connections:
+            self.active_connections[room_id].remove(websocket)
+
+    async def broadcast(self, room_id: str, message: str):
+        if room_id in self.active_connections:
+            for connection in self.active_connections[room_id]:
+                await connection.send_text(message)
+
+    async def close_room(self, room_id: str):
+        if room_id in self.active_connections:
+            for connection in self.active_connections[room_id]:
+                await connection.close()
+            del self.active_connections[room_id]
+
+
+manager = ConnectionManager()
 
 
 def get_current_user(token: str = Depends(oauth2_scheme)):
@@ -792,6 +830,35 @@ def get_pronvicia_id(lat: str, lon: str):
         result = "Buenos Aires"
     id_provincia = Provincia.get_id_from_nombre(result, db=get_db())
     return id_provincia
+
+
+##################### WEB SOCKETS #####################
+@app.websocket("/ws/{room_id}")
+async def websocket_endpoint(websocket: WebSocket, room_id: str):
+    await manager.connect(websocket, room_id)
+    try:
+        while True:
+            data = (
+                await websocket.receive_text()
+            )  # puedes manejar aquí los mensajes entrantes si es necesario
+    except WebSocketDisconnect:
+        manager.disconnect(websocket, room_id)
+
+
+@app.post("/dea-en-camino/{solicitud_dea_id}")
+async def dea_on_the_way(solicitud_dea_id: int):
+    """El endpoint solo le envia una notificacion a los usuarios conectados a la sala"""
+    solicitud_id = str(solicitud_dea_id)
+    await manager.broadcast(solicitud_id, "Tu DEA está en camino!")
+
+
+@app.post("/close-room/{room_id}")
+async def close_room(room_id: str):
+    if room_id in manager.active_connections:
+        await manager.close_room(room_id)
+        return {"message": "Room closed successfully"}
+    else:
+        raise HTTPException(status_code=404, detail="Room not found")
 
 
 if __name__ == "__main__":
