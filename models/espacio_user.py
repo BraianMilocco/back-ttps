@@ -62,16 +62,19 @@ class EspacioUser(Base):
 
     @classmethod
     def get_pending(cls, provincia_id, estado, db):
-
         solicitudes = db.query(cls)
 
-        if (estado == 'APROBADO'):
+        if estado == "APROBADO":
             solicitudes = solicitudes.filter(cls.valida == True).all()
-        elif (estado == 'RECHAZADO'):
-            solicitudes = solicitudes.filter(cls.pendiente == False).filter(cls.valida == False).all()
+        elif estado == "RECHAZADO":
+            solicitudes = (
+                solicitudes.filter(cls.pendiente == False)
+                .filter(cls.valida == False)
+                .all()
+            )
         else:
             solicitudes = solicitudes.filter(cls.pendiente == True).all()
-        
+
         lista_solicitudes = []
         for solicitud in solicitudes:
             if solicitud.espacio.sede.provincia_id == provincia_id:
@@ -139,3 +142,14 @@ class EspacioUser(Base):
 
     def get_espacio(self):
         return self.espacio
+
+    @classmethod
+    def get_emails_admins_espacio(cls, espacio_id, db):
+        admins = (
+            db.query(cls)
+            .filter(cls.espacio_id == espacio_id)
+            .filter(cls.pendiente == False)
+            .filter(cls.valida == True)
+            .all()
+        )
+        return [admin.user.email for admin in admins] if admins else []

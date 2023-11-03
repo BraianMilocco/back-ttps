@@ -5,6 +5,7 @@ from fastapi import (
     status,
     WebSocket,
     WebSocketDisconnect,
+    BackgroundTasks,
 )
 from typing import Dict, List
 from fastapi.middleware.cors import CORSMiddleware
@@ -54,6 +55,8 @@ from models.reparacion_dea import ReparacionDea
 from models.muerte_subita import MuerteSubita
 from models.incovenientes import Incovenientes
 from models.solicitar_dea import SolicitudDea
+
+from mail import render_email_template, send_email
 
 # CREAR MODEL MANTEMIENTO fecha, dea
 app = FastAPI()
@@ -764,7 +767,9 @@ async def get_espacio_por_provincia(
 
 
 @app.post("/publico/solicitar-dea/{espacio_obligado_id}/")
-async def solicitar_dea(espacio_obligado_id, data: SolicitudDeaSchema):
+async def solicitar_dea(
+    espacio_obligado_id, data: SolicitudDeaSchema, background_tasks: BackgroundTasks
+):
     """Solicitar un dea"""
     espacio_obligado = EspacioObligado.get_by_id(espacio_obligado_id, db=get_db())
     if not espacio_obligado:
@@ -777,7 +782,10 @@ async def solicitar_dea(espacio_obligado_id, data: SolicitudDeaSchema):
     if not solicitud:
         raise HTTPException(status_code=400, detail=message)
 
-    return {"success": True}
+    # html_content = render_email_template(data.latitud, data.longitud)
+    to = EspacioUser.get_emails_admins_espacio(espacio_obligado_id, db)
+    # background_tasks.add_task(send_email, to, html_content)
+    return {"success": True, "solictud": solicitud.to_dict_list(), "to": to}
 
 
 @app.get("/publico/solicitar-dea/{espacio_obligado_id}/")
