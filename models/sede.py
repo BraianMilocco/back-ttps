@@ -151,7 +151,10 @@ class Sede(Base):
         return []
 
     def list_espacios(self, lat=None, lon=None):
-        if self.espacio_obligado:
+        if (
+            self.espacio_obligado
+            and self.espacio_obligado[0].estado != "En proceso de ser Cardio-Asistido"
+        ):
             return [
                 espacio.to_dict_public(lat, lon) for espacio in self.espacio_obligado
             ]

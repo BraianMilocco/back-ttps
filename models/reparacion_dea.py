@@ -10,7 +10,7 @@ class ReparacionDea(Base):
     fecha_inicio = Column(DateTime, nullable=True)
     fecha_fin = Column(DateTime, nullable=True)
     tecnico = Column(String, index=True, nullable=True)
-    dea_id = Column(Integer, ForeignKey("deas.id"), nullable=False, unique=True)
+    dea_id = Column(Integer, ForeignKey("deas.id"), nullable=False, unique=False)
     dea = relationship("Dea", back_populates="reparaciones")
 
     @classmethod
