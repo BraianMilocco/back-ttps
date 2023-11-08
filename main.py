@@ -857,6 +857,10 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
 async def dea_on_the_way(solicitud_dea_id: int):
     """El endpoint solo le envia una notificacion a los usuarios conectados a la sala"""
     solicitud_id = str(solicitud_dea_id)
+    solicitud = SolicitudDea.get_by_id(solicitud_dea_id, db=get_db())
+    if not solicitud:
+        raise HTTPException(status_code=400, detail="Solicitud no encontrada")
+    solicitud.atendido(db=get_db())
     await manager.broadcast(solicitud_id, "Tu DEA está en camino!")
 
 

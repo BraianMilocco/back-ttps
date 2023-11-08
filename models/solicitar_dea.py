@@ -28,6 +28,17 @@ class SolicitudDea(Base):
         "ResponsableSede", back_populates="solicitudes_deas"
     )
 
+    def atendido(self, db):
+        self.atendido = True
+        self.fecha_atendido = datetime.now()
+        try:
+            db.commit()
+            db.refresh(self)
+        except Exception as e:
+            db.rollback()
+            return None, str(e)
+        return self, None
+
     @classmethod
     def create(cls, data, espacio_id, db):
         solicitud = cls(
