@@ -4,34 +4,54 @@
 <head>
     <title>Pedido de DEA</title>
     <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f4f4f4;
+            text-align: center; /* Centra el contenido */
+        }
+
+        header {
+            background: #fff;
+            padding: 10px 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
         .button {
             display: inline-block;
-            padding: 10px 20px;
-            font-size: 14px;
+            padding: 15px 30px;
+            font-size: 18px; /* Tamaño de fuente más grande */
             cursor: pointer;
             text-align: center;
             text-decoration: none;
             outline: none;
             color: #fff;
-            background-color: #4CAF50;
+            background-color: #008CBA; /* Color de fondo más moderno */
             border: none;
-            border-radius: 15px;
-            box-shadow: 0 9px #999;
+            border-radius: 25px; /* Bordes más redondeados */
+            box-shadow: 0 4px #999;
+            transition: all 0.3s; /* Transición suave para hover */
+            margin: 10px; /* Espaciado entre botones */
         }
 
         .button:hover {
-            background-color: #3e8e41
+            background-color: #005f73; /* Color al pasar el mouse */
+            box-shadow: 0 6px #666;
+            transform: translateY(-2px); /* Levanta el botón */
         }
 
         .button:active {
-            background-color: #3e8e41;
-            box-shadow: 0 5px #666;
-            transform: translateY(4px);
+            transform: translateY(2px); /* Efecto de clic */
         }
     </style>
 </head>
 
 <body>
+    <header>
+        <img src="https://www.cofa.org.ar/wp-content/uploads/2020/03/ministerio-de-salud-final.png" alt="Ministerio de Salud" />
+    </header>
+
     <p>Se generó un pedido de DEA en {{ lat }} {{ lon }}</p>
     <a href="{{ url_aviso }}" class="button" target="_blank">Avisar que ya hay alguien en camino</a>
     <a href="{{ url_maps }}" class="button" target="_blank">Ver ubicación en Google Maps</a>
