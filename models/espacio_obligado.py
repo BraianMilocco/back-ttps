@@ -362,3 +362,14 @@ class EspacioObligado(Base):
 
     def validar_responsable_sede(self, responsable_sede_id):
         return self.sede.validar_responsable_sede(responsable_sede_id)
+
+    @classmethod
+    def get_from_province(cls, provincia_id: int, db):
+        all_espacios = (
+            db.query(cls).filter(cls.estado == "Cardio-Asistido con DDJJ").all()
+        )
+        espacios = []
+        for espacio in all_espacios:
+            if espacio.sede.provincia_id == provincia_id:
+                espacios.append(espacio)
+        return espacios

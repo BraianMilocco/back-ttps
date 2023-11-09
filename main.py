@@ -783,7 +783,9 @@ async def solicitar_dea(
         raise HTTPException(status_code=400, detail=message)
     url_aviso = settings.front_url + f"/aviso-dea/{solicitud.id}/"
     url_maps = f"https://www.google.com/maps?q={data.latitud},{data.longitud}"
-    html_content = render_email_template(data.latitud, data.longitud, url_aviso, url_maps)
+    html_content = render_email_template(
+        data.latitud, data.longitud, url_aviso, url_maps
+    )
     to = EspacioUser.get_emails_admins_espacio(espacio_obligado_id, db)
     background_tasks.add_task(send_email, to, html_content)
     return {"success": True, "solictud": solicitud.to_dict_list(), "to": to}
@@ -872,6 +874,16 @@ async def close_room(room_id: str):
         return {"message": "Room closed successfully"}
     else:
         raise HTTPException(status_code=404, detail="Room not found")
+
+
+@app.get("/certificador/espacios-obligados/")
+async def get_espacios_obligados(current_user: dict = Depends(get_current_user)):
+    """Retorna los espacios obligados de un certificador"""
+    user_has_role(current_user, "certificador")
+    espacios = EspacioObligado.get_from_province(
+        current_user["provincia_id"], db=get_db()
+    )
+    return {"data": espacios}
 
 
 if __name__ == "__main__":
