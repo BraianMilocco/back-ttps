@@ -518,9 +518,15 @@ async def create_visita(
     )
     if not espacio_obligado:
         raise HTTPException(status_code=400, detail="Espacio obligado no encontrado")
+    tiene_jurisdiccion, message = EspacioObligado.tiene_jurisdiccion(
+        visita_data.espacio_obligado, current_user["provincia_id"], db=get_db()
+    )
+    if not tiene_jurisdiccion:
+        raise HTTPException(status_code=400, detail=message)
     visita, message = Visita.create(visita_data, current_user["id"], db=get_db())
     if not visita:
         raise HTTPException(status_code=500, detail=message)
+
     if visita.paso():
         espacio, message = espacio_obligado.certificar(db=get_db())
         if not espacio:
