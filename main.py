@@ -583,7 +583,7 @@ async def get_reparacion_dea(
     dea_id: int,
     current_user: dict = Depends(get_current_user),
 ):
-    """Carga una reparacion a un dea"""
+    """muestra reparaciones a un dea"""
     user_has_role(current_user, "representante")
     dea = Dea.get_by_id(dea_id, db=get_db())
     if not dea:
