@@ -781,10 +781,11 @@ async def solicitar_dea(
     )
     if not solicitud:
         raise HTTPException(status_code=400, detail=message)
-
-    # html_content = render_email_template(data.latitud, data.longitud)
+    url_aviso = settings.front_url + f"/aviso-dea/{solicitud.id}/"
+    url_maps = f"https://www.google.com/maps?q={data.latitud},{data.longitud}"
+    html_content = render_email_template(data.latitud, data.longitud, url_aviso, url_maps)
     to = EspacioUser.get_emails_admins_espacio(espacio_obligado_id, db)
-    # background_tasks.add_task(send_email, to, html_content)
+    background_tasks.add_task(send_email, to, html_content)
     return {"success": True, "solictud": solicitud.to_dict_list(), "to": to}
 
 
