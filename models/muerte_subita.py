@@ -30,11 +30,11 @@ class MuerteSubita(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     user = relationship("User", back_populates="muertes_subitas")
     espacio_obligado_id = Column(
-        Integer, ForeignKey("espacios_obligados.id"), nullable=False, unique=True
+        Integer, ForeignKey("espacios_obligados.id"), nullable=True, unique=False
     )
     espacio_obligado = relationship("EspacioObligado", back_populates="muertes_subitas")
     responsable_id = Column(
-        Integer, ForeignKey("responsables_sedes.id"), nullable=False, unique=True
+        Integer, ForeignKey("responsables_sedes.id"), nullable=True, unique=False
     )
     responsable = relationship("ResponsableSede", back_populates="muertes_subitas")
 
