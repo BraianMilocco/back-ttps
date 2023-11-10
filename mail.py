@@ -50,7 +50,7 @@ async def send_email(to: List[str], body: str):
                 server.login(sender_email, sender_password)
                 server.send_message(message)
             print("Correo enviado con éxito")
-            break  # Salir del bucle si el correo se envía con éxito
+            # break  # Salir del bucle si el correo se envía con éxito
         except smtplib.SMTPServerDisconnected as e:
             print(f"Fallo al enviar correo, intento {attempt} de 3: {e}")
             time.sleep(2 ** (attempt - 1))  # Backoff exponencial

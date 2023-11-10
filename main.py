@@ -812,8 +812,12 @@ async def solicitar_dea(
         data.latitud, data.longitud, url_aviso, url_maps
     )
     to = EspacioUser.get_emails_admins_espacio(espacio_obligado_id, db)
-    background_tasks.add_task(send_email, to, html_content)
-    return {"success": True, "solictud": solicitud.to_dict_list(), "to": to}
+    await send_email(to, html_content)
+    return {
+        "success": True,
+        "solictud": solicitud.to_dict_list(),
+        "to": to,
+    }
 
 
 @app.get("/publico/solicitar-dea/{espacio_obligado_id}/")
