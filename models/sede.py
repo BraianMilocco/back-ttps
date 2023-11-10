@@ -61,6 +61,7 @@ class Sede(Base):
             "longitud": self.longitud,
             "superficie": self.superficie,
             "cantidad_pisos": self.cantidad_pisos,
+            "tipo": self.tipo,
             "cantidad_personas_externas": self.cantidad_personas_externas,
             "cantidad_personas_estables": self.cantidad_personas_estables,
             "espacio_obligado": self.espacio_obligado[0].to_dict_list()["id"]
@@ -77,6 +78,7 @@ class Sede(Base):
         return {
             "id": self.id,
             "nombre": self.nombre,
+            "tipo": self.tipo,
             "direccion": self.direccion,
             "sector": self.sector,
             "provincia_id": self.provincia_id,
