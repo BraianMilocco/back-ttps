@@ -787,7 +787,7 @@ async def solicitar_dea(
     )
     if not solicitud:
         raise HTTPException(status_code=400, detail=message)
-    url_aviso = settings.front_url + f"/aviso-dea/{solicitud.id}/"
+    url_aviso = settings.front_url + f"/confirmar-solicitud/{solicitud.id}"
     url_maps = f"https://www.google.com/maps?q={data.latitud},{data.longitud}"
     html_content = render_email_template(
         data.latitud, data.longitud, url_aviso, url_maps
