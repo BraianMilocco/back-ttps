@@ -73,6 +73,26 @@ class Sede(Base):
             },
         }
 
+    def to_dict_list_sin_espacio(self):
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "direccion": self.direccion,
+            "sector": self.sector,
+            "provincia_id": self.provincia_id,
+            "latitud": self.latitud,
+            "longitud": self.longitud,
+            "superficie": self.superficie,
+            "cantidad_pisos": self.cantidad_pisos,
+            "cantidad_personas_externas": self.cantidad_personas_externas,
+            "cantidad_personas_estables": self.cantidad_personas_estables,
+            "entidad": {
+                "id": self.entidad_id,
+                "cuit": self.entidad.cuit,
+                "razon_social": self.entidad.razon_social,
+            },
+        }
+
     def info_completa(self):
         if (
             self.sector

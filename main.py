@@ -243,6 +243,25 @@ async def completar_sedes(
     return {"success": user_is_admin}
 
 
+@app.get("/sedes/{espacio_id}/")
+async def get_sede_espacio(
+    espacio_id: int,
+    current_user: dict = Depends(get_current_user),
+):
+    """Completar todos los datos de la sede"""
+    user_has_role(current_user, "representante")
+    espacio = EspacioObligado.get_by_id(espacio_id, db=get_db())
+    if not espacio:
+        raise HTTPException(status_code=400, detail="Espacio no encontrado")
+    user_is_admin = EspacioUser.user_is_admin_espacio(
+        current_user["id"], espacio_id, db
+    )
+    if not user_is_admin:
+        raise HTTPException(status_code=400, detail="No es administrador del espacio")
+    sede = espacio.sede.to_dict_list_sin_espacio()
+    return {"data": sede}
+
+
 @app.post("/espacios_obligados/")
 async def create_espacio_obligado(
     espacio_obligado: EspacioObligadoSchema,
