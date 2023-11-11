@@ -366,10 +366,12 @@ class EspacioObligado(Base):
     @classmethod
     def get_from_province(cls, provincia_id: int, db):
         all_espacios = (
-            db.query(cls).filter(cls.estado == "Cardio-Asistido con DDJJ").all()
+            db.query(cls)
+            .filter(cls.estado != "En proceso de ser Cardio-Asistido")
+            .all()
         )
         espacios = []
         for espacio in all_espacios:
             if espacio.sede.provincia_id == provincia_id:
-                espacios.append(espacio)
+                espacios.append(espacio.to_dict_list())
         return espacios
