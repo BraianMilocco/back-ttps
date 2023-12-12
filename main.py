@@ -915,6 +915,24 @@ async def get_espacios_obligados(current_user: dict = Depends(get_current_user))
     return {"data": espacios}
 
 
+from etl import ETL
+
+
+@app.post("/admin/etl/{key}/")
+async def vencer_certificado(key: str):
+    """Para uso del Cron, se usa para correr el etl que va a llenar
+    la db a la que se va a conectar power bi"""
+    if key != settings.fake_cron_key:
+        raise HTTPException(status_code=400, detail="Key invalida")
+    etl = ETL()
+    try:
+        etl.actualizar_db_etl()
+        etl.actualizar_db_sistema()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    return {"success": True}
+
+
 if __name__ == "__main__":
     Base.metadata.create_all(bind=engine)
     print("Database tables created!")

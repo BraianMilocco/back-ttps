@@ -2,3 +2,5 @@ __pycache__/
 env
 .env
 .vscode
+test_etl.db
+db_etl.db
