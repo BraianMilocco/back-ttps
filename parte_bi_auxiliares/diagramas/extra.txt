@@ -1,0 +1,11 @@
+Acceso a los archivos de DB del datawarehouse y el que se utilizo para llenar el Datawarehouse:
+
+---------------
+https://drive.google.com/drive/folders/1uqf1w0F66Fwi7vrfDkqk6IUuRfny9EDg?usp=sharing
+---------------
+
+
+
+Al modelo original se le tuvieron que agregar campos sobre lo hecho sobre la primer parte 
+Para poder generar data aleatoria y facilitar el etl. Tambien teniendo en cuenta que algunos
+de esos datos agregados, si el sistema fuera a produccion podrian estar.
